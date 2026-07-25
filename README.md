@@ -156,9 +156,19 @@ Power : 5V
 
 # Wiring Diagram
 
-The prototype hardware configuration is documented using KiCad and reflects the validated hardware setup.
+The current hardware architecture includes:
 
-![Wiring Diagram](docs/schematics/flighttelemetry-v082.png)
+- Tattu 4S LiPo Battery
+- INA219 Power Monitoring
+- MP1584 Buck Converter
+- ESP32 DevKitC V4
+- BMP388 Barometric Sensor
+- u-blox NEO-M9N GPS Receiver
+- MicroSD Storage Module
+
+The schematic below reflects the planned Sprint 9 power architecture and telemetry hardware design.
+
+![Wiring Diagram](docs/schematics/flighttelemetry-v090.png)
 
 ---
 
