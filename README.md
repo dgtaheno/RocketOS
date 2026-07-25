@@ -78,6 +78,33 @@ INT : NC
 
 ---
 
+## INA219 Current Sensor *(Planned Integration)*
+
+![INA219](docs/images/INA219.png)
+
+Provides:
+
+- Bus Voltage Measurement
+- Current Measurement
+- Power Consumption Monitoring
+- Battery Telemetry
+
+Planned Configuration:
+
+```text
+Interface : I²C
+
+SDA : GPIO21
+SCL : GPIO22
+
+Power : 3.3V
+```
+
+The INA219 shares the same I²C bus as the BMP388 and will be used for battery voltage, current consumption and power telemetry. Future MAVLink telemetry and flight analytics features will use this data.
+
+---
+
+
 ## u-blox NEO-M9N GPS Receiver
 
 ![NEO-M9N](docs/images/M9N.png)
@@ -143,6 +170,8 @@ ESP32 DevKitC V4
 ├── BMP388Sensor
 │
 ├── GPSSensor
+│
+├── INA219Sensor
 │
 ├── SDLogger
 │
@@ -487,15 +516,17 @@ FIFO Recovery Validation
 # Planned Features
 
 ```text
+MAVLink Telemetry
+
+INA219 Power Monitoring
+
+Battery Telemetry
+
 Flight Analytics
 
 LoRa Telemetry
 
 Ground Station Dashboard
-
-INA219 Power Monitoring
-
-Battery Telemetry
 
 FreeRTOS Architecture
 ```
@@ -507,12 +538,18 @@ FreeRTOS Architecture
 ## v0.9.x
 
 ```text
-Flight Analytics
+MAVLink Telemetry Integration
 
-Maximum Altitude
-Maximum Speed
-Flight Duration
-Vertical Velocity
+HEARTBEAT Messages
+GPS Telemetry
+Altitude Telemetry
+System Status
+
+INA219 Integration
+
+Battery Voltage
+Current Measurement
+Power Monitoring
 ```
 
 ---
@@ -564,6 +601,7 @@ flight-telemetry-data-logger
 │   ├── images
 │   │   ├── banner.png
 │   │   ├── BMP388.png
+│   │   ├── INA219.png
 │   │   ├── M9N.png
 │   │   └── microsd.png
 │   │
