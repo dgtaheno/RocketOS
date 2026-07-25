@@ -13,6 +13,8 @@ Current Sprint 9 hardware prototype validated on real hardware.
 ![Platform](https://img.shields.io/badge/Platform-ESP32-blue)
 ![GPS](https://img.shields.io/badge/GPS-NEO--M9N-green)
 ![Sensor](https://img.shields.io/badge/Sensor-BMP388-orange)
+![Power Monitor](https://img.shields.io/badge/Power-INA219-yellow)
+![Battery](https://img.shields.io/badge/Battery-LiPo_4S-red)
 ![Status](https://img.shields.io/badge/Status-v0.9.0-blue)
 ![Language](https://img.shields.io/badge/Language-C%2B%2B-blue)
 ![PlatformIO](https://img.shields.io/badge/PlatformIO-Enabled-success)
@@ -322,7 +324,18 @@ ESP32 DevKitC V4
 ✅ Fault-Tolerant Logging
 
 ✅ No Telemetry Loss During SD Recovery
+---
+## Power Management
 
+✅ INA219 Hardware Integration
+
+✅ LiPo 4S Architecture
+
+✅ MP1584 Power Regulation
+
+✅ Battery Monitoring Framework
+
+✅ Future Battery Telemetry Support
 ---
 
 # Runtime Event System
@@ -480,9 +493,9 @@ Validated on real hardware:
 
 ✅ No Telemetry Loss During SD Failure
 
-✅ INA219 Hardware Integration2 
+✅ INA219 Hardware Integration
 
-✅ MP1584 Power Regulation4 
+✅ MP1584 Power Regulation
 
 ✅ LiPo 4S Power Architecture
 
@@ -537,7 +550,7 @@ Validated:
 Release:
 
 ```text
-v0.8.2
+v0.9.0
 ```
 
 Completed:
@@ -584,6 +597,12 @@ INA219 Hardware Integration
 Battery Power Architecture
 
 MP1584 Integration
+
+Sprint 9 Hardware Architecture Validation
+
+GPS Fix Validation
+
+Battery + USB Dual-Power Validation
 
 ```
 
@@ -679,6 +698,9 @@ flight-telemetry-data-logger
 │   │   ├── BMP388.png
 │   │   ├── INA219.png
 │   │   ├── M9N.png
+│   │   ├── flighttelemetry-v090.png
+│   │   ├── Tattu4S.png
+│   │   ├── MP1584.png
 │   │   └── microsd.png
 │   │
 │   ├── schematics
