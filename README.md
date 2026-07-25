@@ -154,6 +154,74 @@ Power : 5V
 
 ---
 
+## INA219 Current Sensor *(Planned Integration)*
+
+![INA219](docs/images/INA219.png)
+
+Provides:
+
+- Battery Voltage Measurement
+- Current Measurement
+- Power Consumption Monitoring
+- Future MAVLink Battery Telemetry
+
+Configuration:
+
+```text
+Interface : I²C
+
+SDA : GPIO21
+SCL : GPIO22
+
+Power : 3.3V
+```
+
+The INA219 shares the same I²C bus as the BMP388 and is placed between the battery and the MP1584 buck converter to monitor the total system power consumption.
+
+---
+
+## Power System
+
+![Battery](docs/images/Tattu4S.png)
+
+![MP1584](docs/images/MP1584.png)
+
+Architecture:
+
+```text
+Tattu LiPo 4S
+2200 mAh
+14.8V Nominal
+16.8V Full Charge
+
+          │
+          ▼
+
+       INA219
+
+          │
+          ▼
+
+       MP1584
+
+          │
+          ▼
+
+       +5V_BUS
+
+          │
+          ├── ESP32 DevKitC V4
+          ├── NEO-M9N GPS
+          └── MicroSD Module
+
+ESP32 3V3
+          │
+          ├── BMP388
+          └── INA219
+```
+
+The power architecture is designed to provide battery telemetry, current monitoring and future MAVLink power reporting.
+
 # Wiring Diagram
 
 The current hardware architecture includes:
