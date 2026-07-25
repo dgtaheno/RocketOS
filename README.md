@@ -4,6 +4,12 @@
 
 ![Project Banner](docs/images/banner.png)
 
+# Real Hardware Prototype
+
+Current Sprint 9 hardware prototype validated on real hardware.
+
+![Flight Telemetry Prototype](docs/images/flighttelemetry-v090.png)
+
 ![Platform](https://img.shields.io/badge/Platform-ESP32-blue)
 ![GPS](https://img.shields.io/badge/GPS-NEO--M9N-green)
 ![Sensor](https://img.shields.io/badge/Sensor-BMP388-orange)
@@ -78,7 +84,7 @@ INT : NC
 
 ---
 
-## INA219 Current Sensor *(Planned Integration)*
+## INA219 Current Sensor
 
 ![INA219](docs/images/INA219.png)
 
@@ -89,7 +95,7 @@ Provides:
 - Power Consumption Monitoring
 - Battery Telemetry
 
-Planned Configuration:
+Hardware integrated and validated:
 
 ```text
 Interface : I²C
@@ -101,6 +107,8 @@ Power : 3.3V
 ```
 
 The INA219 shares the same I²C bus as the BMP388 and will be used for battery voltage, current consumption and power telemetry. Future MAVLink telemetry and flight analytics features will use this data.
+
+Firmware integration planned for Sprint 9.
 
 ---
 
@@ -154,32 +162,6 @@ Power : 5V
 
 ---
 
-## INA219 Current Sensor *(Planned Integration)*
-
-![INA219](docs/images/INA219.png)
-
-Provides:
-
-- Battery Voltage Measurement
-- Current Measurement
-- Power Consumption Monitoring
-- Future MAVLink Battery Telemetry
-
-Configuration:
-
-```text
-Interface : I²C
-
-SDA : GPIO21
-SCL : GPIO22
-
-Power : 3.3V
-```
-
-The INA219 shares the same I²C bus as the BMP388 and is placed between the battery and the MP1584 buck converter to monitor the total system power consumption.
-
----
-
 ## Power System
 
 ![Battery](docs/images/Tattu4S.png)
@@ -220,7 +202,13 @@ ESP32 3V3
           └── INA219
 ```
 
-The power architecture is designed to provide battery telemetry, current monitoring and future MAVLink power reporting.
+The power architecture has been validated on real hardware and provides the foundation for:
+
+- Battery voltage monitoring
+- Current measurement
+- Power consumption monitoring
+- Battery health monitoring
+- Future MAVLink battery telemetry
 
 # Wiring Diagram
 
@@ -246,19 +234,14 @@ The schematic below reflects the planned Sprint 9 power architecture and telemet
 ESP32 DevKitC V4
 │
 ├── BMP388Sensor
-│
 ├── GPSSensor
-│
-├── INA219Sensor
-│
+├── INA219Sensor (Sprint 9)
+├── BatteryMonitor (Planned)
 ├── SDLogger
-│
 ├── BufferedLogger
-│
 ├── SystemHealth
-│
 ├── SystemEvents
-│
+├── MAVLinkTelemetry (Planned)
 └── Flight Logger
 ```
 
@@ -497,6 +480,14 @@ Validated on real hardware:
 
 ✅ No Telemetry Loss During SD Failure
 
+✅ INA219 Hardware Integration2 
+
+✅ MP1584 Power Regulation4 
+
+✅ LiPo 4S Power Architecture
+
+✅ Power System Validation
+
 ---
 
 # Buffered Logging Validation
@@ -587,6 +578,13 @@ Buffered Logging
 Automatic Buffer Flush
 
 FIFO Recovery Validation
+
+INA219 Hardware Integration
+
+Battery Power Architecture
+
+MP1584 Integration
+
 ```
 
 ---
