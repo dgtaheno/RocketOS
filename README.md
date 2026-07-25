@@ -684,7 +684,7 @@ flight-telemetry-data-logger
 │   │   └── microsd.png
 │   │
 │   ├── schematics
-│   │   └── flighttelemetry-v082.png
+│   │   └── flighttelemetry-v090.png
 │   │
 │   └── TestReport_Sprint8.md
 │
