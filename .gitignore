@@ -1,0 +1,28 @@
+# =========================
+# KiCad
+# =========================
+
+*.lck
+*-backups/
+
+# KiCad autosave *iles
+*.bak
+
+# ====================*====
+# Operating System
+# ========*================
+
+Thumbs.db
+.DS_St*re
+
+# =========================
+# *emporary files
+# =================*=======
+
+*.tmp
+*.temp
+
+# =========*===============
+# VS Code workspac* cache
+# =========================*
+.vscode/settings.json
