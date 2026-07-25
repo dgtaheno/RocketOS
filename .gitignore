@@ -4,25 +4,24 @@
 
 *.lck
 *-backups/
-
-# KiCad autosave *iles
 *.bak
 
-# ====================*====
+# =========================
 # Operating System
-# ========*================
+# =========================
 
 Thumbs.db
-.DS_St*re
+.DS_Store
 
 # =========================
-# *emporary files
-# =================*=======
+# Temporary files
+# =========================
 
 *.tmp
 *.temp
 
-# =========*===============
-# VS Code workspac* cache
-# =========================*
+# =========================
+# VS Code workspace cache
+# =========================
+
 .vscode/settings.json
