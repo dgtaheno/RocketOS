@@ -13,7 +13,7 @@ Current Sprint 9 hardware prototype validated on real hardware.
 ![Platform](https://img.shields.io/badge/Platform-ESP32-blue)
 ![GPS](https://img.shields.io/badge/GPS-NEO--M9N-green)
 ![Sensor](https://img.shields.io/badge/Sensor-BMP388-orange)
-![Status](https://img.shields.io/badge/Status-v0.8.2-success)
+![Status](https://img.shields.io/badge/Status-v0.9.0-blue)
 ![Language](https://img.shields.io/badge/Language-C%2B%2B-blue)
 ![PlatformIO](https://img.shields.io/badge/PlatformIO-Enabled-success)
 
