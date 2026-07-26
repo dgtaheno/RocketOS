@@ -32,14 +32,280 @@ void MAVLinkTelemetry::sendHeartbeat()
             buffer,
             &msg);
 
-    //Serial.write(
-    //    buffer,
-    //    len);
+    Serial.write(
+        buffer,
+        len);
 
 #if PRINT_TELEMETRY_TO_SERIAL
 
     Serial.println(
         "[MAVLINK] HEARTBEAT sent");
+
+#endif
+}
+
+void MAVLinkTelemetry::sendGPSRawInt(
+    double latitude,
+    double longitude,
+    float altitude,
+    float speedKmh,
+    bool gpsFix)
+{
+    mavlink_message_t msg;
+
+    uint64_t timeUsec =
+        millis() * 1000ULL;
+
+    uint8_t fixType =
+        gpsFix ? 3 : 1;
+
+    int32_t lat =
+        (int32_t)(latitude * 10000000.0);
+
+    int32_t lon =
+        (int32_t)(longitude * 10000000.0);
+
+    int32_t alt =
+        (int32_t)(altitude * 1000.0);
+
+    uint16_t vel =
+        (uint16_t)((speedKmh / 3.6f) * 100.0f);
+
+    mavlink_msg_gps_raw_int_pack(
+        systemId,
+        componentId,
+        &msg,
+        timeUsec,
+        fixType,
+        lat,
+        lon,
+        alt,
+        UINT16_MAX,
+        UINT16_MAX,
+        vel,
+        UINT16_MAX,
+        UINT8_MAX,
+        alt,
+        0,
+        0,
+        0,
+        0,
+        0);
+
+    uint8_t buffer[MAVLINK_MAX_PACKET_LEN];
+
+    uint16_t len =
+        mavlink_msg_to_send_buffer(
+            buffer,
+            &msg);
+
+    Serial.write(
+        buffer,
+        len);
+
+#if PRINT_TELEMETRY_TO_SERIAL
+
+    Serial.println();
+    Serial.println("===== MAVLINK GPS_RAW_INT =====");
+
+    Serial.print("Lat : ");
+    Serial.println(latitude, 6);
+
+    Serial.print("Lon : ");
+    Serial.println(longitude, 6);
+
+    Serial.print("Alt : ");
+    Serial.println(altitude, 1);
+
+    Serial.print("Fix : ");
+    Serial.println(gpsFix ? "YES" : "NO");
+
+    Serial.println("==============================");
+    Serial.println();
+
+#endif
+}
+
+void MAVLinkTelemetry::sendBatteryStatus(
+    float voltageV,
+    float currentmA,
+    float remainingPercent,
+    bool connected)
+{
+    mavlink_message_t msg;
+
+    uint16_t voltages[10];
+
+    for (int i = 0; i < 10; i++)
+    {
+        voltages[i] = UINT16_MAX;
+    }
+
+    if (connected)
+    {
+        voltages[0] =
+            (uint16_t)(voltageV * 1000.0f);
+    }
+
+    int16_t batteryCurrent =
+        connected
+            ? (int16_t)(currentmA * 10.0f)
+            : -1;
+
+    int8_t batteryRemaining =
+        connected
+            ? (int8_t)remainingPercent
+            : -1;
+
+    uint16_t voltagesExt[4];
+
+    for (int i = 0; i < 4; i++)
+    {
+        voltagesExt[i] = UINT16_MAX;
+    }
+
+    mavlink_msg_battery_status_pack(
+        systemId,
+        componentId,
+        &msg,
+        0,
+        MAV_BATTERY_FUNCTION_ALL,
+        MAV_BATTERY_TYPE_LIPO,
+        INT16_MAX,
+        voltages,
+        batteryCurrent,
+        -1,
+        -1,
+        batteryRemaining,
+        0,
+        MAV_BATTERY_CHARGE_STATE_UNDEFINED,
+        voltagesExt,
+        0,
+        0);
+
+    uint8_t buffer[MAVLINK_MAX_PACKET_LEN];
+
+    uint16_t len =
+        mavlink_msg_to_send_buffer(
+            buffer,
+            &msg);
+
+    Serial.write(
+        buffer,
+        len);
+
+#if PRINT_TELEMETRY_TO_SERIAL
+
+    Serial.println();
+    Serial.println("===== MAVLINK BATTERY_STATUS =====");
+
+    Serial.print("Voltage : ");
+    Serial.print(voltageV, 2);
+    Serial.println(" V");
+
+    Serial.print("Current : ");
+    Serial.print(currentmA, 2);
+    Serial.println(" mA");
+
+    Serial.print("SOC     : ");
+    Serial.print(remainingPercent, 1);
+    Serial.println(" %");
+
+    Serial.print("Conn    : ");
+    Serial.println(connected ? "YES" : "NO");
+
+    Serial.println("==================================");
+    Serial.println();
+
+#endif
+}
+
+void MAVLinkTelemetry::sendGlobalPositionIntCov(
+    double latitude,
+    double longitude,
+    float gpsAltitude,
+    float relativeAltitude,
+    float speedKmh)
+{
+    mavlink_message_t msg;
+
+    uint64_t timeUsec =
+        millis() * 1000ULL;
+
+    int32_t lat =
+        (int32_t)(latitude * 10000000.0);
+
+    int32_t lon =
+        (int32_t)(longitude * 10000000.0);
+
+    int32_t alt =
+        (int32_t)(gpsAltitude * 1000.0);
+
+    int32_t relAlt =
+        (int32_t)(relativeAltitude * 1000.0);
+
+    float vx =
+        speedKmh / 3.6f;
+
+    float vy = 0.0f;
+
+    float vz = 0.0f;
+
+    float covariance[36];
+
+    for (int i = 0; i < 36; i++)
+    {
+        covariance[i] = NAN;
+    }
+
+    mavlink_msg_global_position_int_cov_pack(
+        systemId,
+        componentId,
+        &msg,
+        timeUsec,
+        MAV_ESTIMATOR_TYPE_GPS,
+        lat,
+        lon,
+        alt,
+        relAlt,
+        vx,
+        vy,
+        vz,
+        covariance);
+
+    uint8_t buffer[MAVLINK_MAX_PACKET_LEN];
+
+    uint16_t len =
+        mavlink_msg_to_send_buffer(
+            buffer,
+            &msg);
+
+    Serial.write(
+        buffer,
+        len);
+
+#if PRINT_TELEMETRY_TO_SERIAL
+
+    Serial.println();
+    Serial.println("===== MAVLINK GLOBAL_POSITION_INT_COV =====");
+
+    Serial.print("Lat : ");
+    Serial.println(latitude, 6);
+
+    Serial.print("Lon : ");
+    Serial.println(longitude, 6);
+
+    Serial.print("GPS Alt : ");
+    Serial.println(gpsAltitude, 1);
+
+    Serial.print("Flight Alt : ");
+    Serial.println(relativeAltitude, 1);
+
+    Serial.print("Speed : ");
+    Serial.println(speedKmh, 1);
+
+    Serial.println("===========================================");
+    Serial.println();
 
 #endif
 }

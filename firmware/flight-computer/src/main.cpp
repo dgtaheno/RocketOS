@@ -58,6 +58,15 @@ BatteryState previousBatteryState =
     BATTERY_DISCONNECTED;
 
 // --------------------------------------------------
+// MAVLink Cached Battery Telemetry
+// --------------------------------------------------
+
+float mavBatteryVoltage = 0.0f;
+float mavCurrent_mA = 0.0f;
+float mavBatterySoc = 0.0f;
+bool mavBatteryConnected = false;
+
+// --------------------------------------------------
 // Helper: Write Telemetry Record to SD
 // --------------------------------------------------
 
@@ -495,13 +504,6 @@ void setup()
     {
         gps.update();
 
-        if (millis() - lastHeartbeat >= 1000)
-        {
-            lastHeartbeat = millis();
-
-            mavlink.sendHeartbeat();
-        }
-
         if (gps.hasFix())
         {
             break;
@@ -611,6 +613,73 @@ void loop()
 #if GPS_ENABLED
     gps.update();
 #endif
+
+    // --------------------------------------------------
+    // MAVLink Periodic Telemetry
+    // --------------------------------------------------
+
+    if (millis() - lastHeartbeat >= 1000)
+    {
+        lastHeartbeat = millis();
+
+    #if GPS_ENABLED
+
+        double latitude =
+            gps.getLatitude();
+
+        double longitude =
+            gps.getLongitude();
+
+        float gpsAltitude =
+            gps.getAltitude();
+
+        float gpsSpeed =
+            gps.getSpeed();
+
+        bool gpsFix =
+            gps.hasFix();
+
+        float relativeAltitude =
+            gpsReferenceCaptured
+                ? gpsReferenceAltitude +
+                bmp.getRelativeAltitude()
+                : gpsAltitude;
+
+    #else
+
+        double latitude = 0.0;
+        double longitude = 0.0;
+
+        float gpsAltitude = 0.0f;
+        float gpsSpeed = 0.0f;
+        bool gpsFix = false;
+
+        float relativeAltitude = 0.0f;
+
+    #endif
+
+        mavlink.sendHeartbeat();
+
+        mavlink.sendGPSRawInt(
+            latitude,
+            longitude,
+            gpsAltitude,
+            gpsSpeed,
+            gpsFix);
+
+        mavlink.sendBatteryStatus(
+            mavBatteryVoltage,
+            mavCurrent_mA,
+            mavBatterySoc,
+            mavBatteryConnected);
+
+        mavlink.sendGlobalPositionIntCov(
+            latitude,
+            longitude,
+            gpsAltitude,
+            relativeAltitude,
+            gpsSpeed);
+    }
  
     if (millis() - lastLog >= LOG_INTERVAL_MS)
     {
@@ -675,6 +744,11 @@ void loop()
         }
 
         updateBatteryEvents();
+
+        mavBatteryVoltage = batteryVoltage;
+        mavCurrent_mA = current_mA;
+        mavBatterySoc = batteryMonitor.getPercentage();
+        mavBatteryConnected = batteryMonitor.isConnected();
 
 #if GPS_ENABLED
 
