@@ -26,7 +26,7 @@ Hardware platform used during validation testing.
 ![Power](https://img.shields.io/badge/Power-INA219-yellow)
 ![Battery](https://img.shields.io/badge/Battery-LiPo_4S-red)
 ![MAVLink](https://img.shields.io/badge/MAVLink-Telemetry-success)
-![Status](https://img.shields.io/badge/Status-Sprint10.4-blue)
+![Status](https://img.shields.io/badge/Status-Sprint11-blue)
 ![Language](https://img.shields.io/badge/Language-C%2B%2B-blue)
 ![PlatformIO](https://img.shields.io/badge/PlatformIO-Enabled-success)
 
@@ -163,9 +163,7 @@ Tattu LiPo 4S Battery
 
 ---
 
-# MAVLink Telemetry Stack
-
-Current MAVLink implementation validated on hardware:
+## MAVLink Telemetry
 
 ✅ HEARTBEAT
 
@@ -177,9 +175,31 @@ Current MAVLink implementation validated on hardware:
 
 ✅ SYS_STATUS
 
+✅ QGroundControl Integration
+
+---
+
+# MAVLink Telemetry Stack
+
+Current MAVLink implementation validated on real hardware:
+
+✅ HEARTBEAT
+
+✅ GPS_RAW_INT
+
+✅ BATTERY_STATUS
+
+✅ GLOBAL_POSITION_INT_COV
+
+✅ SYS_STATUS
+
+✅ QGroundControl Detection
+
 Runtime validation confirmed:
 
 ```text
+Vehicle Detected by QGroundControl
+
 Battery Connected
 
 GPS Fix Acquired
@@ -194,6 +214,32 @@ No Watchdog Resets
 
 No System Regression
 ```
+
+---
+
+# QGroundControl Validation
+
+Sprint 11 introduced Ground Control Station compatibility through the MAVLink protocol.
+
+The Flight Telemetry & Data Logger successfully establishes a live connection with QGroundControl running on a ground station PC.
+
+Validated functionality:
+
+✅ Vehicle Detection
+
+✅ MAVLink Communication
+
+✅ GPS Telemetry Reception
+
+✅ Battery Status Reception
+
+✅ System Status Reception
+
+✅ Real-Time Telemetry Streaming
+
+![QGroundControl Validation](docs/images/qgroundcontrol-validation.png)
+
+The screenshot above shows successful MAVLink communication between the ESP32 flight computer and QGroundControl.
 
 ---
 
@@ -359,6 +405,12 @@ Validated on real hardware:
 
 ✅ MAVLink SYS_STATUS Validation
 
+✅ QGroundControl Connection Validation
+
+✅ Ground Station Detection Validation
+
+✅ MAVLink End-to-End Telemetry Validation
+
 ✅ No System Regression
 
 ---
@@ -368,9 +420,9 @@ Validated on real hardware:
 ```text
 Current Development Stage
 
-Sprint 10.4
+Sprint 11
 
-MAVLink Telemetry Pack
+QGroundControl Integration
 
 Validated on Real Hardware
 ```
@@ -388,7 +440,9 @@ System Health Monitoring
 
 Fault-Tolerant SD Logging
 
-MAVLink Telemetry Stack
+MAVLink Telemetry
+
+QGroundControl Connectivity
 ```
 
 ---
@@ -402,6 +456,8 @@ docs/TestReport_Sprint9.md
 
 docs/TestReport_Sprint10.md
 
+docs/TestReport_Sprint11.md
+
 docs/schematics/
 
 docs/images/
@@ -412,17 +468,17 @@ docs/images/
 # Next Milestones
 
 ```text
-Ground Station Integration
+VFR_HUD
 
-Mission Planner Validation
+Rocket Flight Algorithms
 
-QGroundControl Validation
+Flight Event Detection
+
+Telemetry Radio Integration
 
 PX4 Interoperability
 
 ArduPilot Interoperability
-
-Telemetry Radio Integration
 ```
 
 ---
