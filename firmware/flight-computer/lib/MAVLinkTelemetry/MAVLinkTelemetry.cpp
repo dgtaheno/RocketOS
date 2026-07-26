@@ -147,9 +147,11 @@ void MAVLinkTelemetry::sendBatteryStatus(
             (uint16_t)(voltageV * 1000.0f);
     }
 
+    // MAVLink uses centi-amps.
+    // 1 cA = 10 mA.
     int16_t batteryCurrent =
         connected
-            ? (int16_t)(currentmA * 10.0f)
+            ? (int16_t)(currentmA / 10.0f)
             : -1;
 
     int8_t batteryRemaining =
@@ -305,6 +307,107 @@ void MAVLinkTelemetry::sendGlobalPositionIntCov(
     Serial.println(speedKmh, 1);
 
     Serial.println("===========================================");
+    Serial.println();
+
+#endif
+}
+
+void MAVLinkTelemetry::sendSysStatus(
+    float voltageV,
+    float currentmA,
+    float remainingPercent,
+    bool connected)
+{
+    mavlink_message_t msg;
+
+    uint32_t onboardControlSensorsPresent = 0;
+    uint32_t onboardControlSensorsEnabled = 0;
+    uint32_t onboardControlSensorsHealth = 0;
+
+    uint16_t load = 0;
+
+    uint16_t voltageBattery =
+        connected
+            ? (uint16_t)(voltageV * 1000.0f)
+            : UINT16_MAX;
+
+    // MAVLink SYS_STATUS current_battery uses centi-amps.
+    // 1 cA = 10 mA.
+    int16_t currentBattery =
+        connected
+            ? (int16_t)(currentmA / 10.0f)
+            : -1;
+
+    int8_t batteryRemaining =
+        connected
+            ? (int8_t)remainingPercent
+            : -1;
+
+    uint16_t dropRateComm = 0;
+    uint16_t errorsComm = 0;
+
+    uint16_t errorsCount1 = 0;
+    uint16_t errorsCount2 = 0;
+    uint16_t errorsCount3 = 0;
+    uint16_t errorsCount4 = 0;
+
+    uint32_t sensorsPresentExtended = 0;
+    uint32_t sensorsEnabledExtended = 0;
+    uint32_t sensorsHealthExtended = 0;
+
+    mavlink_msg_sys_status_pack(
+        systemId,
+        componentId,
+        &msg,
+        onboardControlSensorsPresent,
+        onboardControlSensorsEnabled,
+        onboardControlSensorsHealth,
+        load,
+        voltageBattery,
+        currentBattery,
+        batteryRemaining,
+        dropRateComm,
+        errorsComm,
+        errorsCount1,
+        errorsCount2,
+        errorsCount3,
+        errorsCount4,
+        sensorsPresentExtended,
+        sensorsEnabledExtended,
+        sensorsHealthExtended);
+
+    uint8_t buffer[MAVLINK_MAX_PACKET_LEN];
+
+    uint16_t len =
+        mavlink_msg_to_send_buffer(
+            buffer,
+            &msg);
+
+    Serial.write(
+        buffer,
+        len);
+
+#if PRINT_TELEMETRY_TO_SERIAL
+
+    Serial.println();
+    Serial.println("===== MAVLINK SYS_STATUS =====");
+
+    Serial.print("Voltage : ");
+    Serial.print(voltageV, 2);
+    Serial.println(" V");
+
+    Serial.print("Current : ");
+    Serial.print(currentmA, 2);
+    Serial.println(" mA");
+
+    Serial.print("SOC     : ");
+    Serial.print(remainingPercent, 1);
+    Serial.println(" %");
+
+    Serial.print("Conn    : ");
+    Serial.println(connected ? "YES" : "NO");
+
+    Serial.println("==============================");
     Serial.println();
 
 #endif

@@ -36,6 +36,12 @@ public:
         float relativeAltitude,
         float speedKmh);
 
+    void sendSysStatus(
+        float voltageV,
+        float currentmA,
+        float remainingPercent,
+        bool connected);
+
 private:
     uint8_t systemId;
     uint8_t componentId;

@@ -624,48 +624,48 @@ void loop()
 
     #if GPS_ENABLED
 
-        double latitude =
+        double mavLatitude =
             gps.getLatitude();
 
-        double longitude =
+        double mavLongitude =
             gps.getLongitude();
 
-        float gpsAltitude =
+        float mavGpsAltitude =
             gps.getAltitude();
 
-        float gpsSpeed =
+        float mavGpsSpeed =
             gps.getSpeed();
 
-        bool gpsFix =
+        bool mavGpsFix =
             gps.hasFix();
 
-        float relativeAltitude =
+        float mavRelativeAltitude =
             gpsReferenceCaptured
                 ? gpsReferenceAltitude +
                 bmp.getRelativeAltitude()
-                : gpsAltitude;
+                : mavGpsAltitude;
 
     #else
 
-        double latitude = 0.0;
-        double longitude = 0.0;
+        double mavLatitude = 0.0;
+        double mavLongitude = 0.0;
 
-        float gpsAltitude = 0.0f;
-        float gpsSpeed = 0.0f;
-        bool gpsFix = false;
+        float mavGpsAltitude = 0.0f;
+        float mavGpsSpeed = 0.0f;
+        bool mavGpsFix = false;
 
-        float relativeAltitude = 0.0f;
+        float mavRelativeAltitude = 0.0f;
 
     #endif
 
         mavlink.sendHeartbeat();
 
         mavlink.sendGPSRawInt(
-            latitude,
-            longitude,
-            gpsAltitude,
-            gpsSpeed,
-            gpsFix);
+            mavLatitude,
+            mavLongitude,
+            mavGpsAltitude,
+            mavGpsSpeed,
+            mavGpsFix);
 
         mavlink.sendBatteryStatus(
             mavBatteryVoltage,
@@ -674,11 +674,17 @@ void loop()
             mavBatteryConnected);
 
         mavlink.sendGlobalPositionIntCov(
-            latitude,
-            longitude,
-            gpsAltitude,
-            relativeAltitude,
-            gpsSpeed);
+            mavLatitude,
+            mavLongitude,
+            mavGpsAltitude,
+            mavRelativeAltitude,
+            mavGpsSpeed);
+
+        mavlink.sendSysStatus(
+            mavBatteryVoltage,
+            mavCurrent_mA,
+            mavBatterySoc,
+            mavBatteryConnected);
     }
  
     if (millis() - lastLog >= LOG_INTERVAL_MS)

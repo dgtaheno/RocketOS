@@ -1,6 +1,6 @@
 # 🚀 Flight Telemetry & Data Logger
 
-ESP32-based flight computer featuring GPS telemetry, altitude estimation, battery monitoring, MAVLink integration and fault-tolerant flight data logging.
+ESP32-based flight computer featuring GPS telemetry, altitude estimation, battery monitoring, MAVLink telemetry and fault-tolerant flight data logging.
 
 ![Project Banner](docs/images/banner.png)
 
@@ -25,8 +25,8 @@ Hardware platform used during validation testing.
 ![Sensor](https://img.shields.io/badge/Sensor-BMP388-orange)
 ![Power](https://img.shields.io/badge/Power-INA219-yellow)
 ![Battery](https://img.shields.io/badge/Battery-LiPo_4S-red)
-![MAVLink](https://img.shields.io/badge/MAVLink-Integrated-success)
-![Status](https://img.shields.io/badge/Status-Sprint10.0-blue)
+![MAVLink](https://img.shields.io/badge/MAVLink-Telemetry-success)
+![Status](https://img.shields.io/badge/Status-Sprint10.4-blue)
 ![Language](https://img.shields.io/badge/Language-C%2B%2B-blue)
 ![PlatformIO](https://img.shields.io/badge/PlatformIO-Enabled-success)
 
@@ -41,7 +41,7 @@ The project combines:
 - GPS telemetry
 - Barometric altitude estimation
 - Battery monitoring
-- MAVLink integration
+- MAVLink telemetry
 - Runtime health monitoring
 - Event-driven diagnostics
 - Fault-tolerant SD logging
@@ -84,6 +84,8 @@ Tattu LiPo 4S Battery
 ✅ UTC Time Synchronization
 
 ✅ GPS Timestamped Logging
+
+✅ GPS Fix Monitoring
 
 ---
 
@@ -161,19 +163,37 @@ Tattu LiPo 4S Battery
 
 ---
 
-## MAVLink Foundation
+# MAVLink Telemetry Stack
 
-✅ MAVLink Library Integration
+Current MAVLink implementation validated on hardware:
 
-✅ MAVLinkTelemetry Module
+✅ HEARTBEAT
 
-✅ HEARTBEAT Message Generation
+✅ GPS_RAW_INT
 
-✅ Runtime Validation Successful
+✅ BATTERY_STATUS
 
-✅ No Regression Detected
+✅ GLOBAL_POSITION_INT_COV
 
-✅ Stable Integration With Existing Subsystems
+✅ SYS_STATUS
+
+Runtime validation confirmed:
+
+```text
+Battery Connected
+
+GPS Fix Acquired
+
+System Healthy = YES
+
+Fault Flags = 0x00
+
+No Brownout Detected
+
+No Watchdog Resets
+
+No System Regression
+```
 
 ---
 
@@ -227,47 +247,47 @@ Example:
 ```text
 [EVENT] BATTERY_CONNECTED
 
-[EVENT] BATTERY_DISCONNECTED
-
-[EVENT] SD_REMOVED
+[EVENT] GPS_FIX_ACQUIRED
 
 [EVENT] SD_RECOVERED
 ```
 
 ---
 
-# MAVLink Foundation
+# MAVLink Messages
 
-Current MAVLink implementation:
-
-```text
-MAVLink Library Integrated
-
-MAVLinkTelemetry Module
-
-HEARTBEAT Message
-
-System Validation Successful
-```
-
-Validated runtime output:
+Implemented and validated:
 
 ```text
-[MAVLINK] Initialized
+HEARTBEAT
 
-[MAVLINK] HEARTBEAT sent
-```
-
-Future MAVLink messages:
-
-```text
 GPS_RAW_INT
 
 BATTERY_STATUS
 
-GLOBAL_POSITION_INT
+GLOBAL_POSITION_INT_COV
 
 SYS_STATUS
+```
+
+Generated telemetry includes:
+
+```text
+System Status
+
+GPS Position
+
+GPS Altitude
+
+Flight Altitude
+
+Battery Voltage
+
+Battery Current
+
+Battery Remaining %
+
+System Health State
 ```
 
 ---
@@ -329,9 +349,15 @@ Validated on real hardware:
 
 ✅ CSV Battery Telemetry Validation
 
-✅ MAVLink Foundation Validation
+✅ MAVLink HEARTBEAT Validation
 
-✅ HEARTBEAT Validation
+✅ MAVLink GPS_RAW_INT Validation
+
+✅ MAVLink BATTERY_STATUS Validation
+
+✅ MAVLink GLOBAL_POSITION_INT_COV Validation
+
+✅ MAVLink SYS_STATUS Validation
 
 ✅ No System Regression
 
@@ -340,22 +366,29 @@ Validated on real hardware:
 # Current Status
 
 ```text
-Latest Stable Release
+Current Development Stage
 
-v0.9.2
-Battery Telemetry & Event System
+Sprint 10.4
+
+MAVLink Telemetry Pack
+
+Validated on Real Hardware
 ```
 
-Current Development:
+Current capabilities:
 
 ```text
-Sprint 10.0
+GPS Telemetry
 
-MAVLink Foundation
+Barometric Altitude Estimation
 
-HEARTBEAT Validated
+Battery Monitoring
 
-Project Stable
+System Health Monitoring
+
+Fault-Tolerant SD Logging
+
+MAVLink Telemetry Stack
 ```
 
 ---
@@ -379,39 +412,17 @@ docs/images/
 # Next Milestones
 
 ```text
-Sprint 10.1
+Ground Station Integration
 
-GPS_RAW_INT
+Mission Planner Validation
 
-Latitude
-Longitude
-GPS Altitude
-GPS Fix
-```
+QGroundControl Validation
 
-```text
-Sprint 10.2
+PX4 Interoperability
 
-BATTERY_STATUS
+ArduPilot Interoperability
 
-Battery Voltage
-Current
-Remaining %
-```
-
-```text
-Sprint 10.3
-
-GLOBAL_POSITION_INT
-
-Flight Altitude
-Ground Speed
-```
-
-```text
-Sprint 10.4
-
-SYS_STATUS
+Telemetry Radio Integration
 ```
 
 ---
