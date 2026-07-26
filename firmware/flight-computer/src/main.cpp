@@ -62,7 +62,11 @@ bool writeTelemetryRecordToSd(
         record.longitude,
         record.gpsAltitude,
         record.flightAltitude,
-        record.speed);
+        record.speed,
+        record.batteryVoltage,
+        record.current_mA,
+        record.power_mW,
+        record.batterySoc);
 }
 
 // --------------------------------------------------
@@ -686,6 +690,11 @@ void loop()
         record.flightAltitude = flightAltitude;
 
         record.speed = gpsSpeed;
+
+        record.batteryVoltage = batteryVoltage;
+        record.current_mA = current_mA;
+        record.power_mW = power_mW;
+        record.batterySoc = batteryMonitor.getPercentage();
 
         // --------------------------------------------------
         // Store Telemetry

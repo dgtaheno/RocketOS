@@ -28,6 +28,15 @@ public:
     const char* getStateString() const;
 
 private:
+    struct SocPoint
+    {
+        float voltage;
+        float percentage;
+    };
+
+    float calculateSocFromVoltage(
+        float voltage) const;
+
     float batteryVoltage;
     float batteryPercentage;
 

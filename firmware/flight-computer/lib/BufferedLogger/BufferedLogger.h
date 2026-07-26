@@ -23,12 +23,16 @@ struct TelemetryRecord
     float flightAltitude;
 
     float speed;
+
+    float batteryVoltage;
+    float current_mA;
+    float power_mW;
+    float batterySoc;
 };
 
 class BufferedLogger
 {
 public:
-
     BufferedLogger();
 
     bool push(
@@ -57,7 +61,6 @@ public:
     uint32_t getTotalBuffered() const;
 
 private:
-
     TelemetryRecord buffer[BUFFERED_LOGGER_CAPACITY];
 
     size_t head;

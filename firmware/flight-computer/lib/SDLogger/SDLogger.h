@@ -46,7 +46,11 @@ public:
         double longitude,
         float gpsAltitude,
         float flightAltitude,
-        float speed);
+        float speed,
+        float batteryVoltage,
+        float current_mA,
+        float power_mW,
+        float batterySoc);
 
     // =====================================================
     // Storage Diagnostics

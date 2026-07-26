@@ -1,5 +1,4 @@
 #include "SDLogger.h"
-
 #include "../../include/Config.h"
 
 #include <Arduino.h>
@@ -88,7 +87,11 @@ bool SDLogger::createLogFile()
         "longitude,"
         "gps_altitude_m,"
         "flight_altitude_m,"
-        "speed_kmh");
+        "speed_kmh,"
+        "battery_voltage_v,"
+        "current_ma,"
+        "power_mw,"
+        "battery_soc_percent");
 
     file.close();
 
@@ -99,7 +102,8 @@ bool SDLogger::createLogFile(
     const String& localDate,
     const String& localTime)
 {
-    if (localDate == "0000-00-00" || localTime == "00:00:00")
+    if (localDate == "0000-00-00" ||
+        localTime == "00:00:00")
     {
         return createLogFile();
     }
@@ -169,7 +173,11 @@ bool SDLogger::createLogFile(
         "longitude,"
         "gps_altitude_m,"
         "flight_altitude_m,"
-        "speed_kmh");
+        "speed_kmh,"
+        "battery_voltage_v,"
+        "current_ma,"
+        "power_mw,"
+        "battery_soc_percent");
 
     file.close();
 
@@ -195,7 +203,11 @@ bool SDLogger::writeData(
     double longitude,
     float gpsAltitude,
     float flightAltitude,
-    float speed)
+    float speed,
+    float batteryVoltage,
+    float current_mA,
+    float power_mW,
+    float batterySoc)
 {
     if (logFileName[0] == '\0')
     {
@@ -241,7 +253,19 @@ bool SDLogger::writeData(
     file.print(flightAltitude, CSV_DECIMAL_PLACES);
     file.print(",");
 
-    file.println(speed, 2);
+    file.print(speed, 2);
+    file.print(",");
+
+    file.print(batteryVoltage, 2);
+    file.print(",");
+
+    file.print(current_mA, 2);
+    file.print(",");
+
+    file.print(power_mW, 2);
+    file.print(",");
+
+    file.println(batterySoc, 1);
 
     bool writeOk = !file.getWriteError();
 

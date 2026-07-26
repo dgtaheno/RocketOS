@@ -5,7 +5,6 @@ BufferedLogger::BufferedLogger()
     head = 0;
     tail = 0;
     count = 0;
-
     droppedRecords = 0;
     totalBuffered = 0;
 }
@@ -26,7 +25,6 @@ bool BufferedLogger::push(
         BUFFERED_LOGGER_CAPACITY;
 
     count++;
-
     totalBuffered++;
 
     return true;
