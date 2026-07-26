@@ -599,7 +599,7 @@ void loop()
 #if GPS_ENABLED
     gps.update();
 #endif
-
+ 
     if (millis() - lastLog >= LOG_INTERVAL_MS)
     {
         lastLog = millis();
