@@ -8,6 +8,8 @@
 #include "SystemHealth.h"
 #include "SystemEvents.h"
 #include "BufferedLogger.h"
+#include "INA219Sensor.h"
+#include "BatteryMonitor.h"
 
 // --------------------------------------------------
 // System Modules
@@ -19,6 +21,8 @@ GPSSensor gps;
 SystemHealth health;
 SystemEvents events;
 BufferedLogger telemetryBuffer;
+INA219Sensor ina219Sensor;
+BatteryMonitor batteryMonitor;
 
 // --------------------------------------------------
 // Timing
@@ -324,6 +328,15 @@ void setup()
     Serial.println("[PASS] BMP388 sensor");
 
     // --------------------------------------------------
+    // INA219
+    // --------------------------------------------------
+
+    if (!ina219Sensor.begin())
+    {
+        Serial.println("[WARN] INA219 power monitor not detected");
+    }
+
+    // --------------------------------------------------
     // SD Card
     // --------------------------------------------------
 
@@ -551,6 +564,31 @@ void loop()
         float pressure = bmp.getPressure();
         float bmpAltitude = bmp.getRelativeAltitude();
 
+        // --------------------------------------------------
+        // INA219 Update
+        // --------------------------------------------------
+
+        bool ina219Ok = ina219Sensor.update();
+
+        float batteryVoltage = 0.0f;
+        float current_mA = 0.0f;
+        float power_mW = 0.0f;
+
+        if (ina219Ok)
+        {
+            batteryVoltage = ina219Sensor.getBusVoltage_V();
+            current_mA = ina219Sensor.getCurrent_mA();
+            power_mW = ina219Sensor.getPower_mW();
+
+            batteryMonitor.update(
+                batteryVoltage);
+        }
+        else
+        {
+            batteryMonitor.update(
+                0.0f);
+        }
+
 #if GPS_ENABLED
 
         // --------------------------------------------------
@@ -739,6 +777,52 @@ void loop()
         Serial.print("BMP Alt     : ");
         Serial.print(bmpAltitude, 2);
         Serial.println(" m");
+
+        Serial.println();
+
+        if (ina219Ok)
+        {
+            Serial.print("Battery V   : ");
+            Serial.print(batteryVoltage, 2);
+            Serial.println(" V");
+
+            Serial.print("Current     : ");
+            Serial.print(current_mA, 2);
+            Serial.println(" mA");
+
+            Serial.print("Power       : ");
+            Serial.print(power_mW, 2);
+            Serial.println(" mW");
+
+            Serial.print("Battery Conn: ");
+            Serial.println(
+                batteryMonitor.isConnected()
+                    ? "YES"
+                    : "NO");
+
+            Serial.print("Battery SOC : ");
+            Serial.print(
+                batteryMonitor.getPercentage(),
+                1);
+            Serial.println(" %");
+
+            Serial.print("Battery St. : ");
+            Serial.println(
+                batteryMonitor.getStateString());
+        }
+        else
+        {
+            Serial.println("INA219      : NOT AVAILABLE");
+
+            Serial.print("Battery Conn: ");
+            Serial.println("NO");
+
+            Serial.print("Battery SOC : ");
+            Serial.println("0.0 %");
+
+            Serial.print("Battery St. : ");
+            Serial.println("DISCONNECTED");
+        }
 
 #if GPS_ENABLED
 
