@@ -46,6 +46,15 @@ bool gpsWarningActive = false;
 GpsErrorCode activeGpsWarning = GPS_ERROR_NONE;
 
 // --------------------------------------------------
+// Battery Event State Tracking
+// --------------------------------------------------
+
+bool batteryPreviouslyConnected = false;
+
+BatteryState previousBatteryState =
+    BATTERY_DISCONNECTED;
+
+// --------------------------------------------------
 // Helper: Write Telemetry Record to SD
 // --------------------------------------------------
 
@@ -194,6 +203,61 @@ void reportGpsHealth(
 
     gpsWarningActive = false;
     activeGpsWarning = GPS_ERROR_NONE;
+}
+
+// --------------------------------------------------
+// Helper: Update Battery Events Without Spam
+// --------------------------------------------------
+
+void updateBatteryEvents()
+{
+    bool batteryConnected =
+        batteryMonitor.isConnected();
+
+    BatteryState currentBatteryState =
+        batteryMonitor.getState();
+
+    // --------------------------------------------------
+    // Battery connection state changes
+    // --------------------------------------------------
+
+    if (!batteryPreviouslyConnected &&
+         batteryConnected)
+    {
+        events.logEvent(
+            EVENT_BATTERY_CONNECTED);
+    }
+    else if (batteryPreviouslyConnected &&
+            !batteryConnected)
+    {
+        events.logEvent(
+            EVENT_BATTERY_DISCONNECTED);
+    }
+
+    // --------------------------------------------------
+    // Battery warning / critical state changes
+    // --------------------------------------------------
+
+    if (batteryConnected &&
+        currentBatteryState != previousBatteryState)
+    {
+        if (currentBatteryState == BATTERY_WARNING)
+        {
+            events.logEvent(
+                EVENT_BATTERY_WARNING);
+        }
+        else if (currentBatteryState == BATTERY_CRITICAL)
+        {
+            events.logEvent(
+                EVENT_BATTERY_CRITICAL);
+        }
+    }
+
+    batteryPreviouslyConnected =
+        batteryConnected;
+
+    previousBatteryState =
+        currentBatteryState;
 }
 
 // --------------------------------------------------
@@ -580,9 +644,14 @@ void loop()
 
         if (ina219Ok)
         {
-            batteryVoltage = ina219Sensor.getBusVoltage_V();
-            current_mA = ina219Sensor.getCurrent_mA();
-            power_mW = ina219Sensor.getPower_mW();
+            batteryVoltage =
+                ina219Sensor.getBusVoltage_V();
+
+            current_mA =
+                ina219Sensor.getCurrent_mA();
+
+            power_mW =
+                ina219Sensor.getPower_mW();
 
             batteryMonitor.update(
                 batteryVoltage);
@@ -592,6 +661,8 @@ void loop()
             batteryMonitor.update(
                 0.0f);
         }
+
+        updateBatteryEvents();
 
 #if GPS_ENABLED
 

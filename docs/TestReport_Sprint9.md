@@ -26,7 +26,7 @@ Date:
 
 # Objective
 
-Validate the Sprint 9 power architecture, INA219 integration, battery monitoring subsystem and power telemetry functionality under real hardware conditions.
+Validate the Sprint 9 power architecture, INA219 integration, battery monitoring subsystem, battery event system and power telemetry functionality under real hardware conditions.
 
 ---
 
@@ -54,7 +54,7 @@ Tattu LiPo 4S
 ## Firmware
 
 ```text
-v0.9.1
+v0.9.2
 ```
 
 Validated Modules:
@@ -86,12 +86,14 @@ BatteryMonitor
 | T97 | Battery State Monitoring | PASS |
 | T98 | Battery SOC Estimation | PASS |
 | T99 | USB + LiPo Dual-Power Validation | PASS |
+| T100 | Battery Connected Event | PASS |
+| T101 | Battery Disconnected Event | PASS |
+| T102 | Battery Telemetry CSV Logging | PASS |
+| T103 | Battery Event Validation | PASS |
 
 ---
 
-# Test Cases
-
----
+# Power Monitoring Validation
 
 ## T90 – INA219 Detection
 
@@ -127,8 +129,8 @@ Observed:
 
 ```text
 Connect LiPo battery
+
 Run system normally
-Observe runtime telemetry
 ```
 
 ### Expected
@@ -146,11 +148,7 @@ PASS
 Observed:
 
 ```text
-Battery V : 15.10 V
-
-Battery V : 15.11 V
-
-Battery V : 15.12 V
+Battery V : 15.00 - 15.12 V
 ```
 
 ### Conclusion
@@ -168,7 +166,8 @@ operates correctly and remains stable.
 
 ```text
 Connect LiPo battery
-Observe current telemetry
+
+Observe telemetry
 ```
 
 ### Expected
@@ -186,11 +185,7 @@ PASS
 Observed:
 
 ```text
-Current : 47.1 mA
-
-Current : 49.5 mA
-
-Current : 51.6 mA
+Current : 25 - 52 mA
 ```
 
 ### Conclusion
@@ -208,7 +203,8 @@ operates correctly.
 
 ```text
 Connect LiPo battery
-Observe power telemetry
+
+Observe telemetry
 ```
 
 ### Expected
@@ -226,11 +222,7 @@ PASS
 Observed:
 
 ```text
-Power : 712 mW
-
-Power : 744 mW
-
-Power : 780 mW
+Power : 380 - 780 mW
 ```
 
 ### Conclusion
@@ -242,13 +234,14 @@ operates correctly.
 
 ---
 
+# Battery Monitoring Validation
+
 ## T94 – Battery Connected Detection
 
 ### Procedure
 
 ```text
 Connect LiPo battery
-Observe BatteryMonitor
 ```
 
 ### Expected
@@ -284,7 +277,7 @@ Battery presence correctly detected.
 ```text
 Disconnect LiPo battery
 
-Power system using USB only
+Power system from USB only
 ```
 
 ### Expected
@@ -304,11 +297,11 @@ PASS
 Observed:
 
 ```text
-Battery V   : 4.13 V
+Battery V   : 4.1 V
 
 Battery Conn: NO
 
-Battery SOC : 0.0 %
+Battery SOC : 0 %
 
 Battery St. : DISCONNECTED
 ```
@@ -326,17 +319,23 @@ Battery absence correctly detected.
 ### Procedure
 
 ```text
-Start system on USB power only
+Start system using USB only
 
-Connect LiPo while system remains running
+Connect LiPo while running
 ```
 
 ### Expected
 
 ```text
-Battery state transitions from
-DISCONNECTED to CONNECTED
-without system restart.
+Battery transitions from
+
+DISCONNECTED
+
+to
+
+CONNECTED
+
+without reboot.
 ```
 
 ### Result
@@ -358,9 +357,10 @@ Battery Conn : YES
 ### Conclusion
 
 ```text
-Battery hot-plug operation validated.
+Hot-plug operation validated.
 
 No reboot required.
+
 No instability observed.
 ```
 
@@ -372,7 +372,6 @@ No instability observed.
 
 ```text
 Operate system using LiPo battery
-Observe reported battery state
 ```
 
 ### Expected
@@ -407,16 +406,13 @@ operates correctly.
 ### Procedure
 
 ```text
-Operate system with LiPo battery
-
-Observe calculated SOC
+Operate system using LiPo battery
 ```
 
 ### Expected
 
 ```text
-SOC value calculated from
-4-cell LiPo voltage curve
+SOC estimation available
 ```
 
 ### Result
@@ -428,23 +424,14 @@ PASS
 Observed:
 
 ```text
-Battery V   : 15.10 V
-
-Battery SOC : 57.6 %
-```
-
-```text
-Battery V   : 15.12 V
-
-Battery SOC : 57.9 %
+Battery SOC : 54 - 58 %
 ```
 
 ### Conclusion
 
 ```text
-SOC calculation based on
-LiPo 4S voltage curve
-operates correctly.
+SOC estimation operates correctly
+using the LiPo 4S voltage model.
 ```
 
 ---
@@ -491,26 +478,180 @@ Dual-power architecture validated.
 
 ---
 
-# Power Monitoring Validation
+# Battery Event System Validation
 
-Observed runtime telemetry:
+## T100 – Battery Connected Event
+
+### Procedure
 
 ```text
-Battery V   : 15.10 - 15.12 V
+Start system on USB power
 
-Current     : 47 - 52 mA
+Connect LiPo battery
+```
 
-Power       : 712 - 780 mW
+### Expected
 
-Battery SOC : 57.6 - 57.9 %
+```text
+BATTERY_CONNECTED event generated
+```
+
+### Result
+
+```text
+PASS
+```
+
+Observed:
+
+```text
+[EVENT] BATTERY_CONNECTED
+
+Battery Conn : YES
 
 Battery St. : OK
 ```
 
-Result:
+### Conclusion
+
+```text
+Battery connection event generated correctly.
+```
+
+---
+
+## T101 – Battery Disconnected Event
+
+### Procedure
+
+```text
+Operate system using LiPo battery
+
+Disconnect LiPo battery
+```
+
+### Expected
+
+```text
+BATTERY_DISCONNECTED event generated
+```
+
+### Result
 
 ```text
 PASS
+```
+
+Observed:
+
+```text
+[EVENT] BATTERY_DISCONNECTED
+
+Battery Conn : NO
+
+Battery St. : DISCONNECTED
+```
+
+### Conclusion
+
+```text
+Battery disconnection event generated correctly.
+```
+
+---
+
+## T102 – Battery Telemetry CSV Logging
+
+### Procedure
+
+```text
+Operate system normally
+
+Record telemetry
+
+Inspect generated CSV file
+```
+
+### Expected
+
+```text
+Battery telemetry saved to CSV
+```
+
+### Result
+
+```text
+PASS
+```
+
+Observed:
+
+```csv
+timestamp_s,
+temperature_c,
+pressure_hpa,
+bmp_altitude_m,
+gps_fix,
+latitude,
+longitude,
+gps_altitude_m,
+flight_altitude_m,
+speed_kmh,
+battery_voltage_v,
+current_ma,
+power_mw,
+battery_soc_percent
+```
+
+### Conclusion
+
+```text
+Battery telemetry successfully recorded.
+```
+
+---
+
+## T103 – Battery Event Validation
+
+### Procedure
+
+```text
+Connect battery
+
+Disconnect battery
+
+Observe event stream
+```
+
+### Expected
+
+```text
+Single event generated per transition
+No event spam
+```
+
+### Result
+
+```text
+PASS
+```
+
+Observed:
+
+```text
+[EVENT] BATTERY_CONNECTED
+
+...
+
+[EVENT] BATTERY_DISCONNECTED
+```
+
+### Conclusion
+
+```text
+Event state machine validated.
+
+Anti-spam behaviour operates correctly.
 ```
 
 ---
@@ -520,19 +661,19 @@ PASS
 Validated Hardware:
 
 ```text
-Tattu LiPo 4S
-
-INA219 Current Sensor
-
-MP1584 Buck Converter
-
 ESP32 DevKitC V4
 
 BMP388
 
 u-blox NEO-M9N
 
+INA219 Current Sensor
+
 MicroSD Storage
+
+MP1584 Buck Converter
+
+Tattu LiPo 4S
 ```
 
 Result:
@@ -555,7 +696,7 @@ No known open issues.
 
 Sprint 9 objectives successfully validated.
 
-Validated in real hardware:
+Validated on real hardware:
 
 ```text
 INA219 Detection
@@ -576,6 +717,14 @@ Battery State Monitoring
 
 Battery SOC Estimation
 
+Battery Telemetry CSV Logging
+
+Battery Connected Event
+
+Battery Disconnected Event
+
+Battery Event Validation
+
 USB + LiPo Dual-Power Validation
 
 Power Architecture Validation
@@ -592,6 +741,10 @@ SPRINT 9.2A PASSED
 
 SPRINT 9.2B PASSED
 
+SPRINT 9.3 PASSED
+
+SPRINT 9.4 PASSED
+
 NO OPEN ISSUES
 ```
 
@@ -600,32 +753,25 @@ NO OPEN ISSUES
 # Next Sprint
 
 ```text
-Sprint 9.3
+Sprint 10
 
-- Battery Telemetry CSV Logging
-- Battery Voltage Storage
-- Current Logging
-- Power Logging
-- Battery SOC Logging
+- MAVLink Foundation
+- HEARTBEAT
+- SYS_STATUS
+- GPS_RAW_INT
+- GLOBAL_POSITION_INT
+- BATTERY_STATUS
 ```
 
 Future:
 
 ```text
-Sprint 9.4
-- Battery Events
-- Battery Warnings
-- Battery Critical State
-
-Sprint 9.5
-- MAVLink Battery Telemetry
-
-Sprint 10
+Sprint 11
 - LoRa Telemetry
 
-Sprint 11
-- Flight Analytics
-
 Sprint 12
+- Ground Station
+
+Sprint 13
 - FreeRTOS Architecture
 ```

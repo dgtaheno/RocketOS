@@ -387,6 +387,18 @@ const char* SystemEvents::eventToText(
         case EVENT_SD_STORAGE_CRITICAL:
             return "SD_STORAGE_CRITICAL";
 
+        case EVENT_BATTERY_CONNECTED:
+            return "BATTERY_CONNECTED";
+
+        case EVENT_BATTERY_DISCONNECTED:
+            return "BATTERY_DISCONNECTED";
+
+        case EVENT_BATTERY_WARNING:
+            return "BATTERY_WARNING";
+
+        case EVENT_BATTERY_CRITICAL:
+            return "BATTERY_CRITICAL";
+
         case EVENT_LOG_FILE_CREATED:
             return "LOG_FILE_CREATED";
 
