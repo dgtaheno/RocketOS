@@ -15,7 +15,7 @@ Current Sprint 9 hardware prototype validated on real hardware.
 ![Sensor](https://img.shields.io/badge/Sensor-BMP388-orange)
 ![Power Monitor](https://img.shields.io/badge/Power-INA219-yellow)
 ![Battery](https://img.shields.io/badge/Battery-LiPo_4S-red)
-![Status](https://img.shields.io/badge/Status-v0.9.0-blue)
+![Status](https://img.shields.io/badge/Status-v0.9.1-blue)
 ![Language](https://img.shields.io/badge/Language-C%2B%2B-blue)
 ![PlatformIO](https://img.shields.io/badge/PlatformIO-Enabled-success)
 
@@ -110,7 +110,16 @@ Power : 3.3V
 
 The INA219 shares the same I²C bus as the BMP388 and will be used for battery voltage, current consumption and power telemetry. Future MAVLink telemetry and flight analytics features will use this data.
 
-Firmware integration planned for Sprint 9.
+Firmware integration completed and validated on real hardware.
+
+Current telemetry includes:
+
+- Battery Voltage
+- Current Measurement
+- Power Consumption
+- Battery Connection Detection
+- Battery State Monitoring
+- Battery SOC Estimation
 
 ---
 
@@ -237,8 +246,8 @@ ESP32 DevKitC V4
 │
 ├── BMP388Sensor
 ├── GPSSensor
-├── INA219Sensor (Sprint 9)
-├── BatteryMonitor (Planned)
+├── INA219Sensor
+├── BatteryMonitor
 ├── SDLogger
 ├── BufferedLogger
 ├── SystemHealth
@@ -335,7 +344,17 @@ ESP32 DevKitC V4
 
 ✅ Battery Monitoring Framework
 
-✅ Future Battery Telemetry Support
+✅ Battery Voltage Monitoring
+
+✅ Current Measurement
+
+✅ Power Monitoring
+
+✅ Battery Connected Detection
+
+✅ Battery SOC Estimation
+
+✅ Battery State Monitoring
 ---
 
 # Runtime Event System
@@ -501,6 +520,16 @@ Validated on real hardware:
 
 ✅ Power System Validation
 
+✅ INA219 Power Monitoring Validation
+
+✅ Battery Connected Detection
+
+✅ Battery Hot-Plug Validation
+
+✅ Battery State Monitoring
+
+✅ Battery SOC Estimation
+
 ---
 
 # Buffered Logging Validation
@@ -550,7 +579,7 @@ Validated:
 Release:
 
 ```text
-v0.9.0
+v0.9.1
 ```
 
 Completed:
@@ -603,6 +632,20 @@ Sprint 9 Hardware Architecture Validation
 GPS Fix Validation
 
 Battery + USB Dual-Power Validation
+
+Battery Voltage Monitoring
+
+Current Measurement
+
+Power Consumption Monitoring
+
+Battery Connected Detection
+
+Battery State Monitoring
+
+Battery SOC Estimation
+
+Battery Hot-Plug Validation
 
 ```
 
