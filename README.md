@@ -1,6 +1,6 @@
 # 🚀 Flight Telemetry & Data Logger
 
-ESP32-based flight computer featuring GPS telemetry, altitude estimation, battery monitoring, event-driven diagnostics and fault-tolerant flight data logging.
+ESP32-based flight computer featuring GPS telemetry, altitude estimation, battery monitoring, MAVLink integration and fault-tolerant flight data logging.
 
 ![Project Banner](docs/images/banner.png)
 
@@ -8,7 +8,7 @@ ESP32-based flight computer featuring GPS telemetry, altitude estimation, batter
 
 # Real Hardware Prototype
 
-Hardware configuration used during validation testing.
+Hardware platform used during validation testing.
 
 - ESP32 DevKitC V4
 - u-blox NEO-M9N GPS
@@ -16,7 +16,7 @@ Hardware configuration used during validation testing.
 - INA219 Power Monitor
 - MicroSD Storage
 - MP1584 Buck Converter
-- LiPo 4S Battery
+- Tattu LiPo 4S Battery
 
 ![Flight Telemetry Prototype](docs/images/flighttelemetry-v090.png)
 
@@ -25,7 +25,8 @@ Hardware configuration used during validation testing.
 ![Sensor](https://img.shields.io/badge/Sensor-BMP388-orange)
 ![Power](https://img.shields.io/badge/Power-INA219-yellow)
 ![Battery](https://img.shields.io/badge/Battery-LiPo_4S-red)
-![Version](https://img.shields.io/badge/Version-v0.9.2-blue)
+![MAVLink](https://img.shields.io/badge/MAVLink-Integrated-success)
+![Status](https://img.shields.io/badge/Status-Sprint10.0-blue)
 ![Language](https://img.shields.io/badge/Language-C%2B%2B-blue)
 ![PlatformIO](https://img.shields.io/badge/PlatformIO-Enabled-success)
 
@@ -33,18 +34,20 @@ Hardware configuration used during validation testing.
 
 # Overview
 
-Flight Telemetry & Data Logger is a modular ESP32-based flight computer designed for real-time telemetry acquisition, altitude estimation and reliable flight data recording.
+Flight Telemetry & Data Logger is a modular ESP32-based flight computer designed for telemetry acquisition, altitude estimation, power monitoring and reliable flight data recording.
 
-The system combines:
+The project combines:
 
 - GPS telemetry
-- Barometric altitude measurement
+- Barometric altitude estimation
 - Battery monitoring
-- Event-driven diagnostics
-- Fault-tolerant logging
+- MAVLink integration
 - Runtime health monitoring
+- Event-driven diagnostics
+- Fault-tolerant SD logging
+- Buffered telemetry recovery
 
-All features have been validated on real hardware.
+All features included in this repository have been validated on real hardware.
 
 ---
 
@@ -52,11 +55,17 @@ All features have been validated on real hardware.
 
 ```text
 ESP32 DevKitC V4
-BMP388 Barometric Sensor
+
 u-blox NEO-M9N GPS
+
+BMP388 Barometric Sensor
+
 INA219 Power Monitor
-MicroSD Storage
+
+MicroSD Storage Module
+
 MP1584 Buck Converter
+
 Tattu LiPo 4S Battery
 ```
 
@@ -72,9 +81,9 @@ Tattu LiPo 4S Battery
 
 ✅ Ground Speed
 
-✅ UTC Time Acquisition
+✅ UTC Time Synchronization
 
-✅ GPS Timestamp Generation
+✅ GPS Timestamped Logging
 
 ---
 
@@ -108,9 +117,9 @@ Tattu LiPo 4S Battery
 
 ✅ Battery State Monitoring
 
-✅ Battery Hot-Plug Detection
-
 ✅ Battery Event System
+
+✅ Battery Hot-Plug Detection
 
 ---
 
@@ -149,6 +158,41 @@ Tattu LiPo 4S Battery
 ✅ SD Removal Detection
 
 ✅ SD Recovery Detection
+
+---
+
+## MAVLink Foundation
+
+✅ MAVLink Library Integration
+
+✅ MAVLinkTelemetry Module
+
+✅ HEARTBEAT Message Generation
+
+✅ Runtime Validation Successful
+
+✅ No Regression Detected
+
+✅ Stable Integration With Existing Subsystems
+
+---
+
+# System Architecture
+
+```text
+ESP32 DevKitC V4
+│
+├── BMP388Sensor
+├── GPSSensor
+├── INA219Sensor
+├── BatteryMonitor
+├── SDLogger
+├── BufferedLogger
+├── SystemHealth
+├── SystemEvents
+├── MAVLinkTelemetry
+└── Flight Logger
+```
 
 ---
 
@@ -192,6 +236,42 @@ Example:
 
 ---
 
+# MAVLink Foundation
+
+Current MAVLink implementation:
+
+```text
+MAVLink Library Integrated
+
+MAVLinkTelemetry Module
+
+HEARTBEAT Message
+
+System Validation Successful
+```
+
+Validated runtime output:
+
+```text
+[MAVLINK] Initialized
+
+[MAVLINK] HEARTBEAT sent
+```
+
+Future MAVLink messages:
+
+```text
+GPS_RAW_INT
+
+BATTERY_STATUS
+
+GLOBAL_POSITION_INT
+
+SYS_STATUS
+```
+
+---
+
 # CSV Format
 
 ```csv
@@ -213,29 +293,9 @@ battery_soc_percent
 
 ---
 
-# System Architecture
-
-```text
-ESP32 DevKitC V4
-│
-├── BMP388Sensor
-├── GPSSensor
-├── INA219Sensor
-├── BatteryMonitor
-├── SDLogger
-├── BufferedLogger
-├── SystemHealth
-├── SystemEvents
-└── Flight Logger
-```
-
----
-
 # Validation Status
 
 Validated on real hardware:
-
-✅ POST Validation
 
 ✅ GPS Validation
 
@@ -245,11 +305,13 @@ Validated on real hardware:
 
 ✅ Buffered Logging Validation
 
+✅ FIFO Recovery Validation
+
 ✅ SD Recovery Validation
 
-✅ Health Monitoring Validation
+✅ Runtime Health Monitoring Validation
 
-✅ Runtime Event Validation
+✅ Event System Validation
 
 ✅ INA219 Validation
 
@@ -259,39 +321,41 @@ Validated on real hardware:
 
 ✅ Power Monitoring Validation
 
-✅ Battery Connected Detection
-
-✅ Battery Hot-Plug Validation
+✅ Battery SOC Validation
 
 ✅ Battery Event Validation
 
+✅ Battery Hot-Plug Validation
+
 ✅ CSV Battery Telemetry Validation
+
+✅ MAVLink Foundation Validation
+
+✅ HEARTBEAT Validation
+
+✅ No System Regression
 
 ---
 
 # Current Status
 
-Release:
-
 ```text
+Latest Stable Release
+
 v0.9.2
+Battery Telemetry & Event System
 ```
 
-Completed:
+Current Development:
 
 ```text
-Sprint 8
-- Health Monitoring
-- Runtime Events
-- SD Diagnostics
-- Buffered Logging
+Sprint 10.0
 
-Sprint 9
-- INA219 Integration
-- Battery Monitoring
-- Power Telemetry
-- Battery Events
-- CSV Battery Logging
+MAVLink Foundation
+
+HEARTBEAT Validated
+
+Project Stable
 ```
 
 ---
@@ -300,8 +364,13 @@ Sprint 9
 
 ```text
 docs/TestReport_Sprint8.md
+
 docs/TestReport_Sprint9.md
+
+docs/TestReport_Sprint10.md
+
 docs/schematics/
+
 docs/images/
 ```
 
@@ -310,18 +379,39 @@ docs/images/
 # Next Milestones
 
 ```text
-Sprint 10
-- MAVLink Integration
-- HEARTBEAT
-- SYS_STATUS
-- GPS_RAW_INT
-- BATTERY_STATUS
+Sprint 10.1
 
-Sprint 11
-- LoRa Telemetry
+GPS_RAW_INT
 
-Sprint 12
-- Ground Station
+Latitude
+Longitude
+GPS Altitude
+GPS Fix
+```
+
+```text
+Sprint 10.2
+
+BATTERY_STATUS
+
+Battery Voltage
+Current
+Remaining %
+```
+
+```text
+Sprint 10.3
+
+GLOBAL_POSITION_INT
+
+Flight Altitude
+Ground Speed
+```
+
+```text
+Sprint 10.4
+
+SYS_STATUS
 ```
 
 ---

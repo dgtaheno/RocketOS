@@ -10,6 +10,7 @@
 #include "BufferedLogger.h"
 #include "INA219Sensor.h"
 #include "BatteryMonitor.h"
+#include "MAVLinkTelemetry.h"
 
 // --------------------------------------------------
 // System Modules
@@ -23,6 +24,7 @@ SystemEvents events;
 BufferedLogger telemetryBuffer;
 INA219Sensor ina219Sensor;
 BatteryMonitor batteryMonitor;
+MAVLinkTelemetry mavlink;
 
 // --------------------------------------------------
 // Timing
@@ -30,6 +32,7 @@ BatteryMonitor batteryMonitor;
 
 unsigned long lastLog = 0;
 unsigned long lastHealthPrint = 0;
+unsigned long lastHeartbeat = 0;
 
 // --------------------------------------------------
 // GPS Altitude Reference
@@ -492,6 +495,13 @@ void setup()
     {
         gps.update();
 
+        if (millis() - lastHeartbeat >= 1000)
+        {
+            lastHeartbeat = millis();
+
+            mavlink.sendHeartbeat();
+        }
+
         if (gps.hasFix())
         {
             break;
@@ -583,6 +593,8 @@ void setup()
     Serial.println("All systems passed");
     Serial.println("System READY");
     Serial.println();
+
+    mavlink.begin();
 
     events.logEvent(
         EVENT_SYSTEM_READY);
