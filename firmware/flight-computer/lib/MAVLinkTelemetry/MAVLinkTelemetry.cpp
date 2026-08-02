@@ -134,6 +134,9 @@ void MAVLinkTelemetry::sendBatteryStatus(
 {
     mavlink_message_t msg;
 
+    // MAVLink BATTERY_STATUS.voltages[10]
+    // Cells 1 to 10, in mV.
+    // Unused cells MUST be UINT16_MAX.
     uint16_t voltages[10];
 
     for (int i = 0; i < 10; i++)
@@ -159,12 +162,22 @@ void MAVLinkTelemetry::sendBatteryStatus(
             ? (int8_t)remainingPercent
             : -1;
 
+    // MAVLink BATTERY_STATUS.voltages_ext[4]
+    // Cells 11 to 14, in mV.
+    // Unused cells MUST be 0, not UINT16_MAX.
+    // Using UINT16_MAX here makes ground stations add
+    // 4 x 65535 mV = 262.14 V to the reported pack voltage.
     uint16_t voltagesExt[4];
 
     for (int i = 0; i < 4; i++)
     {
-        voltagesExt[i] = UINT16_MAX;
+        voltagesExt[i] = 0;
     }
+
+    uint8_t chargeState =
+        connected
+            ? MAV_BATTERY_CHARGE_STATE_OK
+            : MAV_BATTERY_CHARGE_STATE_UNDEFINED;
 
     mavlink_msg_battery_status_pack(
         systemId,
@@ -180,7 +193,7 @@ void MAVLinkTelemetry::sendBatteryStatus(
         -1,
         batteryRemaining,
         0,
-        MAV_BATTERY_CHARGE_STATE_UNDEFINED,
+        chargeState,
         voltagesExt,
         0,
         0);
