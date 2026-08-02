@@ -1,11 +1,11 @@
 # TestReport_Sprint11.md
 
 # Flight Telemetry & Data Logger
-## Sprint 11 – MAVLink Integration & QGroundControl Validation
+## Sprint 11 – MAVLink Integration, QGroundControl Validation & Flight Instrumentation
 
 **Project:** Flight Telemetry & Data Logger  
 **Repository:** flight-telemetry-data-logger  
-**Sprint:** 11 (including 11.2, 11.3 and 11.3.1)  
+**Sprint:** 11 (including 11.2, 11.3, 11.3.1 and 11.4)  
 **Release:** v0.11.0 / v0.11.1  
 **Date:** July 2026  
 **Author:** David Garcia-Taheño
@@ -22,10 +22,14 @@ This sprint focused on:
 - HEARTBEAT message transmission
 - GPS_RAW_INT implementation
 - GLOBAL_POSITION_INT_COV implementation
+- GLOBAL_POSITION_INT implementation
 - BATTERY_STATUS implementation
 - SYS_STATUS implementation
+- VFR_HUD implementation
+- Climb rate estimation
 - QGroundControl integration and live validation
 - Correction of invalid battery pack voltage reporting
+- Correction of residual ground speed reporting
 - Verification of telemetry output through MAVLink streams
 - Validation of system compilation and continuous execution
 
@@ -51,9 +55,9 @@ This sprint focused on:
 |------------|----------|
 | PlatformIO | Latest |
 | ESP32 Arduino Framework | Current |
-| MAVLink C Library | common dialect (integrated) |
+| MAVLink C Library | common dialect (includes standard dialect) |
 | QGroundControl | Installed and validated |
-| Firmware Branches | sprint11-rocket-flight-development, sprint11.3.1-battery-status-fix |
+| Firmware Branches | sprint11-rocket-flight-development, sprint11.4-flight-instrumentation |
 
 ---
 
@@ -120,7 +124,28 @@ Vehicle position is exported through GLOBAL_POSITION_INT_COV using the GPS estim
 
 ---
 
-## 4. BATTERY_STATUS
+## 4. GLOBAL_POSITION_INT
+
+### Description
+
+Standard position message consumed by QGroundControl to populate the relative altitude indicator.
+
+### Parameters Included
+
+- Latitude
+- Longitude
+- GPS Altitude (mm)
+- Relative Altitude above home (mm)
+- Velocity components (cm/s)
+- Heading (unknown, UINT16_MAX)
+
+### Result
+
+✅ Relative altitude successfully displayed in QGroundControl
+
+---
+
+## 5. BATTERY_STATUS
 
 ### Description
 
@@ -141,7 +166,7 @@ Battery telemetry measured by the INA219 is encoded into MAVLink BATTERY_STATUS 
 
 ---
 
-## 5. SYS_STATUS
+## 6. SYS_STATUS
 
 ### Description
 
@@ -160,7 +185,36 @@ System-level status including battery information is transmitted through SYS_STA
 
 ---
 
-## 6. Serial MAVLink Stream
+## 7. VFR_HUD
+
+### Description
+
+Flight instrumentation message providing ground station HUD values.
+
+### Parameters Included
+
+- Ground speed (m/s)
+- Airspeed (not measured, 0)
+- Altitude (m)
+- Climb rate (m/s)
+- Heading (degrees)
+- Throttle (not applicable, 0)
+
+### Climb Rate Estimation
+
+Climb rate is derived from successive barometric altitude samples:
+
+```text
+climbRate = (altitude - lastAltitude) / deltaTimeSeconds
+```
+
+### Result
+
+✅ Ground speed and climb rate successfully displayed in QGroundControl
+
+---
+
+## 8. Serial MAVLink Stream
 
 ### Description
 
@@ -174,7 +228,7 @@ No communication lockups detected.
 
 ---
 
-## 7. QGroundControl Integration
+## 9. QGroundControl Integration
 
 ### Description
 
@@ -187,6 +241,9 @@ QGroundControl was installed and connected to the ESP32 flight computer over the
 - Real-time position updates
 - Battery telemetry monitoring
 - System status monitoring
+- Relative altitude instrumentation
+- Ground speed instrumentation
+- Climb rate instrumentation
 
 ### Result
 
@@ -223,8 +280,6 @@ This matched the reported value exactly, confirming the root cause.
 
 ## Fix
 
-Implemented in branch `sprint11.3.1-battery-status-fix`:
-
 - `voltages_ext[]` initialized to `0` for all unused cells
 - `charge_state` changed from `MAV_BATTERY_CHARGE_STATE_UNDEFINED` to `MAV_BATTERY_CHARGE_STATE_OK` when the battery is connected
 - Inline documentation added clarifying the difference between `voltages` and `voltages_ext`
@@ -241,282 +296,14 @@ Implemented in branch `sprint11.3.1-battery-status-fix`:
 
 ---
 
-# Functional Tests
+# Defect Report – Relative Altitude Not Displayed
 
-## Test 1 – Firmware Compilation
+## Issue
 
-### Procedure
+QGroundControl reported **0.0 m** relative altitude despite valid barometric and GPS altitude data being available on board and correctly logged to SD.
 
-Compile complete firmware project.
+## Investigation
 
-### Expected Result
+GLOBAL_POSITION_INT_COV was transmitted instead of GLOBAL_POSITION_INT. QGroundControl populates its relative altitude indicator exclusively from `GLOBAL_POSITION_INT.relative_alt`.
 
-Successful build without errors.
-
-### Actual Result
-
-✅ PASS
-
-Project compiled successfully.
-
----
-
-## Test 2 – Power-On Self Test
-
-### Procedure
-
-Power up ESP32 system and observe POST sequence.
-
-### Expected Result
-
-All subsystems pass initialization.
-
-### Actual Result
-
-✅ PASS
-
-```text
-[PASS] BufferedLogger
-[PASS] BMP388 sensor
-[PASS] INA219 sensor
-[PASS] SD card
-[PASS] GPS receiver
-[PASS] Flight log created
-
-All systems passed
-System READY
-```
-
----
-
-## Test 3 – HEARTBEAT Transmission
-
-### Procedure
-
-Monitor MAVLink output.
-
-### Expected Result
-
-HEARTBEAT message every second.
-
-### Actual Result
-
-✅ PASS
-
-Consistent periodic transmission observed.
-
----
-
-## Test 4 – GPS Acquisition
-
-### Procedure
-
-Wait for GPS lock.
-
-### Expected Result
-
-Valid GPS fix and stable position.
-
-### Actual Result
-
-✅ PASS
-
-```text
-GPS Detected: YES
-GPS Fix     : YES
-GPS Alt     : 56.6 m
-Flight Alt  : 56.48 m
-```
-
----
-
-## Test 5 – GPS_RAW_INT Generation
-
-### Procedure
-
-Inspect transmitted MAVLink messages.
-
-### Expected Result
-
-GPS position encoded into GPS_RAW_INT.
-
-### Actual Result
-
-✅ PASS
-
-Messages generated correctly.
-
----
-
-## Test 6 – GLOBAL_POSITION_INT_COV Generation
-
-### Procedure
-
-Monitor generated position messages.
-
-### Expected Result
-
-Position data available through MAVLink.
-
-### Actual Result
-
-✅ PASS
-
-Vehicle position displayed on the QGroundControl map.
-
----
-
-## Test 7 – BATTERY_STATUS Generation
-
-### Procedure
-
-Compare INA219 serial output against QGroundControl battery panel.
-
-### Expected Result
-
-Battery voltage, current and SOC consistent between both sources.
-
-### Actual Result
-
-✅ PASS (after Sprint 11.3.1 fix)
-
-```text
-Charge State : Ok
-Remaining    : 62 %
-Voltage      : 15.30 V
-```
-
----
-
-## Test 8 – SYS_STATUS Generation
-
-### Procedure
-
-Monitor SYS_STATUS reception in QGroundControl.
-
-### Expected Result
-
-Battery and system status available.
-
-### Actual Result
-
-✅ PASS
-
----
-
-## Test 9 – QGroundControl Vehicle Detection
-
-### Procedure
-
-Connect ESP32 to QGroundControl over serial MAVLink.
-
-### Expected Result
-
-Vehicle detected and telemetry displayed.
-
-### Actual Result
-
-✅ PASS
-
-Vehicle detected, GPS position plotted and battery data displayed.
-
----
-
-## Test 10 – Continuous Operation
-
-### Procedure
-
-Run firmware for extended period.
-
-### Expected Result
-
-Stable telemetry operation.
-
-### Actual Result
-
-✅ PASS
-
-```text
-Fault Flags   : 0x00
-System Healthy: YES
-SD Failures   : 0
-Dropped Records: 0
-```
-
-No crashes, brownouts or watchdog resets observed.
-
----
-
-# Results Summary
-
-| Test | Result |
-|--------|---------|
-| Build Validation | ✅ PASS |
-| Power-On Self Test | ✅ PASS |
-| HEARTBEAT | ✅ PASS |
-| GPS Acquisition | ✅ PASS |
-| GPS_RAW_INT | ✅ PASS |
-| GLOBAL_POSITION_INT_COV | ✅ PASS |
-| BATTERY_STATUS | ✅ PASS |
-| SYS_STATUS | ✅ PASS |
-| QGroundControl Detection | ✅ PASS |
-| Continuous Operation | ✅ PASS |
-
----
-
-# Sprint Achievements
-
-### Completed
-
-- MAVLink framework operational
-- HEARTBEAT transmission implemented
-- GPS_RAW_INT implemented
-- GLOBAL_POSITION_INT_COV implemented
-- BATTERY_STATUS implemented
-- SYS_STATUS implemented
-- QGroundControl integration validated on real hardware
-- Battery pack voltage defect identified, corrected and verified
-- Debug instrumentation removed prior to release
-- README and documentation updated
-- Releases v0.11.0 and v0.11.1 published
-
-### Repository Status
-
-✅ Build stable
-
-✅ Telemetry operational
-
-✅ Ground Control Station interoperability validated
-
----
-
-# Known Limitations
-
-The current implementation provides a functional MAVLink telemetry pipeline, but the vehicle is still reported as **Not Ready / PreFlight** by QGroundControl, as several messages expected from a full autopilot are not yet implemented.
-
-Pending future development:
-
-- VFR_HUD
-- ATTITUDE
-- HOME_POSITION
-- STATUSTEXT event reporting
-- Mission support
-- DataFlash-style flight logging
-- FreeRTOS-based multitasking architecture
-- Long-range telemetry link
-
----
-
-# Conclusion
-
-Sprint 11 established and validated the first complete MAVLink telemetry pipeline for the Flight Telemetry & Data Logger project.
-
-The ESP32 flight computer now transmits HEARTBEAT, GPS_RAW_INT, GLOBAL_POSITION_INT_COV, BATTERY_STATUS and SYS_STATUS, and has been successfully detected by QGroundControl on real hardware, with live GPS position and battery telemetry displayed on the ground station.
-
-An invalid pack voltage reported through BATTERY_STATUS was traced to incorrect initialization of the extended cell voltage array, corrected in Sprint 11.3.1 and verified against INA219 measurements.
-
-With this sprint, the project transitions from a standalone telemetry logger to a MAVLink-compatible flight telemetry platform capable of interoperating with standard Ground Control Station software.
-
-**Sprint Status:** ✅ COMPLETED
-
-**Ready for Sprint 11.4 – VFR_HUD Flight Instrumentation**
+Initial searches for `mavlink_msg_global_position_int.h` within the common 

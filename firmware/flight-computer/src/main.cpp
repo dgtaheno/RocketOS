@@ -645,6 +645,12 @@ void loop()
                 bmp.getRelativeAltitude()
                 : mavGpsAltitude;
 
+        // Height above the barometric reference point.
+        // MAVLink GLOBAL_POSITION_INT.relative_alt expects
+        // altitude above home, not altitude above sea level.
+        float mavHeightAboveGround =
+            bmp.getRelativeAltitude();
+
     #else
 
         double mavLatitude = 0.0;
@@ -655,8 +661,17 @@ void loop()
         bool mavGpsFix = false;
 
         float mavRelativeAltitude = 0.0f;
+        float mavHeightAboveGround = 0.0f;
 
     #endif
+
+        // GPS speed deadband.
+        // Prevents ground station instruments from showing
+        // residual speed noise while the vehicle is stationary.
+        if (fabs(mavGpsSpeed) < GPS_SPEED_DEADBAND_KMH)
+        {
+            mavGpsSpeed = 0.0f;
+        }
 
         mavlink.sendHeartbeat();
 
@@ -673,6 +688,13 @@ void loop()
             mavBatterySoc,
             mavBatteryConnected);
 
+        mavlink.sendGlobalPositionInt(
+            mavLatitude,
+            mavLongitude,
+            mavGpsAltitude,
+            mavHeightAboveGround,
+            mavGpsSpeed);
+
         mavlink.sendGlobalPositionIntCov(
             mavLatitude,
             mavLongitude,
@@ -685,6 +707,11 @@ void loop()
             mavCurrent_mA,
             mavBatterySoc,
             mavBatteryConnected);
+
+        mavlink.sendVFRHUD(
+            mavGpsSpeed,
+            mavRelativeAltitude,
+            0.0f);
     }
  
     if (millis() - lastLog >= LOG_INTERVAL_MS)

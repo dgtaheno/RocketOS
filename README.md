@@ -1,24 +1,8 @@
 # 🚀 Flight Telemetry & Data Logger
 
-ESP32-based flight computer featuring GPS telemetry, altitude estimation, battery monitoring, MAVLink telemetry and fault-tolerant flight data logging.
+ESP32-based flight computer featuring GPS telemetry, altitude estimation, battery monitoring, MAVLink telemetry, ground station instrumentation and fault-tolerant flight data logging.
 
 ![Project Banner](docs/images/banner.png)
-
----
-
-# Real Hardware Prototype
-
-Hardware platform used during validation testing.
-
-- ESP32 DevKitC V4
-- u-blox NEO-M9N GPS
-- BMP388 Barometric Sensor
-- INA219 Power Monitor
-- MicroSD Storage
-- MP1584 Buck Converter
-- Tattu LiPo 4S Battery
-
-![Flight Telemetry Prototype](docs/images/flighttelemetry-v090.png)
 
 ![Platform](https://img.shields.io/badge/Platform-ESP32-blue)
 ![GPS](https://img.shields.io/badge/GPS-NEO--M9N-green)
@@ -26,15 +10,51 @@ Hardware platform used during validation testing.
 ![Power](https://img.shields.io/badge/Power-INA219-yellow)
 ![Battery](https://img.shields.io/badge/Battery-LiPo_4S-red)
 ![MAVLink](https://img.shields.io/badge/MAVLink-Telemetry-success)
-![Status](https://img.shields.io/badge/Status-Sprint11-blue)
+![QGroundControl](https://img.shields.io/badge/QGroundControl-Validated-success)
+![Status](https://img.shields.io/badge/Status-Sprint11.4-blue)
 ![Language](https://img.shields.io/badge/Language-C%2B%2B-blue)
 ![PlatformIO](https://img.shields.io/badge/PlatformIO-Enabled-success)
 
 ---
 
+# Real Hardware Prototype
+
+Hardware platform used during validation testing.
+
+![Flight Telemetry Prototype](docs/images/flighttelemetry-v090.png)
+
+---
+
+# Hardware
+
+| Component | Model | Function |
+|------------|--------|----------|
+| Microcontroller | ESP32 DevKitC V4 | Flight computer |
+| GNSS Receiver | u-blox NEO-M9N | Position, altitude, UTC time |
+| Barometric Sensor | BMP388 | Pressure, temperature, relative altitude |
+| Power Monitor | INA219 | Voltage, current, power |
+| Storage | MicroSD Module | Flight data logging |
+| Power Supply | MP1584 Buck Converter | Regulated 5V rail |
+| Battery | Tattu LiPo 4S | System power source |
+
+<table>
+  <tr>
+    <td align="center"><img src="docs/images/M9N.png" width="150"><br><b>NEO-M9N</b></td>
+    <td align="center"><img src="docs/images/BMP388.png" width="150"><br><b>BMP388</b></td>
+    <td align="center"><img src="docs/images/INA219.png" width="150"><br><b>INA219</b></td>
+  </tr>
+  <tr>
+    <td align="center"><img src="docs/images/microsd.png" width="150"><br><b>MicroSD</b></td>
+    <td align="center"><img src="docs/images/MP1584.png" width="150"><br><b>MP1584</b></td>
+    <td align="center"><img src="docs/images/Tattu4S.png" width="150"><br><b>Tattu LiPo 4S</b></td>
+  </tr>
+</table>
+
+---
+
 # Overview
 
-Flight Telemetry & Data Logger is a modular ESP32-based flight computer designed for telemetry acquisition, altitude estimation, power monitoring and reliable flight data recording.
+Flight Telemetry & Data Logger is a modular ESP32-based flight computer designed for telemetry acquisition, altitude estimation, power monitoring, ground station interoperability and reliable flight data recording.
 
 The project combines:
 
@@ -42,32 +62,13 @@ The project combines:
 - Barometric altitude estimation
 - Battery monitoring
 - MAVLink telemetry
+- Ground station instrumentation
 - Runtime health monitoring
 - Event-driven diagnostics
 - Fault-tolerant SD logging
 - Buffered telemetry recovery
 
 All features included in this repository have been validated on real hardware.
-
----
-
-# Hardware
-
-```text
-ESP32 DevKitC V4
-
-u-blox NEO-M9N GPS
-
-BMP388 Barometric Sensor
-
-INA219 Power Monitor
-
-MicroSD Storage Module
-
-MP1584 Buck Converter
-
-Tattu LiPo 4S Battery
-```
 
 ---
 
@@ -98,6 +99,8 @@ Tattu LiPo 4S Battery
 ✅ Relative Altitude Estimation
 
 ✅ Flight Altitude Calculation
+
+✅ Climb Rate Estimation
 
 ✅ GPS Speed Deadband Filtering
 
@@ -171,9 +174,13 @@ Tattu LiPo 4S Battery
 
 ✅ BATTERY_STATUS
 
+✅ GLOBAL_POSITION_INT
+
 ✅ GLOBAL_POSITION_INT_COV
 
 ✅ SYS_STATUS
+
+✅ VFR_HUD
 
 ✅ QGroundControl Integration
 
@@ -183,17 +190,15 @@ Tattu LiPo 4S Battery
 
 Current MAVLink implementation validated on real hardware:
 
-✅ HEARTBEAT
-
-✅ GPS_RAW_INT
-
-✅ BATTERY_STATUS
-
-✅ GLOBAL_POSITION_INT_COV
-
-✅ SYS_STATUS
-
-✅ QGroundControl Detection
+| Message | ID | Purpose | Status |
+|----------|-----|---------|---------|
+| HEARTBEAT | 0 | Vehicle presence and link status | ✅ |
+| SYS_STATUS | 1 | System and battery status | ✅ |
+| GPS_RAW_INT | 24 | Raw GNSS position and fix type | ✅ |
+| GLOBAL_POSITION_INT | 33 | Position and relative altitude | ✅ |
+| GLOBAL_POSITION_INT_COV | 63 | Position with covariance | ✅ |
+| VFR_HUD | 74 | Ground speed, altitude, climb rate | ✅ |
+| BATTERY_STATUS | 147 | Battery voltage, current and SOC | ✅ |
 
 Runtime validation confirmed:
 
@@ -203,6 +208,12 @@ Vehicle Detected by QGroundControl
 Battery Connected
 
 GPS Fix Acquired
+
+Relative Altitude Reported
+
+Ground Speed Reported
+
+Climb Rate Reported
 
 System Healthy = YES
 
@@ -235,11 +246,28 @@ Validated functionality:
 
 ✅ System Status Reception
 
+✅ Relative Altitude Instrumentation
+
+✅ Ground Speed Instrumentation
+
+✅ Climb Rate Instrumentation
+
 ✅ Real-Time Telemetry Streaming
 
 ![QGroundControl Validation](docs/images/qgroundcontrol-validation.png)
 
-The screenshot above shows successful MAVLink communication between the ESP32 flight computer and QGroundControl.
+*QGroundControl establishing a live MAVLink connection with the ESP32 flight computer.*
+
+![QGroundControl Flight Instruments](docs/images/qgc-flight-instruments.png)
+
+*Flight instrumentation reported through GLOBAL_POSITION_INT and VFR_HUD: relative altitude, climb rate and ground speed. Residual values are consistent with BMP388 sensor noise under stationary conditions.*
+
+| Instrument | Source Message | Field | Reported |
+|-------------|----------------|--------|----------|
+| Relative Altitude | GLOBAL_POSITION_INT | relative_alt | 1.3 m |
+| Climb Rate | VFR_HUD | climb | 0.0 m/s |
+| Ground Speed | VFR_HUD | groundspeed | 0.0 m/s |
+| Distance to Home | HOME_POSITION | not implemented | --.-- m |
 
 ---
 
@@ -300,23 +328,7 @@ Example:
 
 ---
 
-# MAVLink Messages
-
-Implemented and validated:
-
-```text
-HEARTBEAT
-
-GPS_RAW_INT
-
-BATTERY_STATUS
-
-GLOBAL_POSITION_INT_COV
-
-SYS_STATUS
-```
-
-Generated telemetry includes:
+# Generated Telemetry
 
 ```text
 System Status
@@ -326,6 +338,12 @@ GPS Position
 GPS Altitude
 
 Flight Altitude
+
+Relative Altitude
+
+Ground Speed
+
+Climb Rate
 
 Battery Voltage
 
@@ -401,13 +419,21 @@ Validated on real hardware:
 
 ✅ MAVLink BATTERY_STATUS Validation
 
+✅ MAVLink GLOBAL_POSITION_INT Validation
+
 ✅ MAVLink GLOBAL_POSITION_INT_COV Validation
 
 ✅ MAVLink SYS_STATUS Validation
 
-✅ QGroundControl Connection Validation
+✅ MAVLink VFR_HUD Validation
 
-✅ Ground Station Detection Validation
+✅ Relative Altitude Validation
+
+✅ Climb Rate Validation
+
+✅ Ground Station Instrument Validation
+
+✅ QGroundControl Connection Validation
 
 ✅ MAVLink End-to-End Telemetry Validation
 
@@ -420,9 +446,9 @@ Validated on real hardware:
 ```text
 Current Development Stage
 
-Sprint 11
+Sprint 11.4
 
-QGroundControl Integration
+Flight Instrumentation
 
 Validated on Real Hardware
 ```
@@ -434,6 +460,8 @@ GPS Telemetry
 
 Barometric Altitude Estimation
 
+Climb Rate Estimation
+
 Battery Monitoring
 
 System Health Monitoring
@@ -441,6 +469,8 @@ System Health Monitoring
 Fault-Tolerant SD Logging
 
 MAVLink Telemetry
+
+Ground Station Instrumentation
 
 QGroundControl Connectivity
 ```
@@ -468,13 +498,15 @@ docs/images/
 # Next Milestones
 
 ```text
-VFR_HUD
-
-Rocket Flight Algorithms
+HOME_POSITION
 
 Flight Event Detection
 
-Telemetry Radio Integration
+Launch & Apogee Algorithms
+
+FreeRTOS Architecture
+
+Long-Range Telemetry
 
 PX4 Interoperability
 

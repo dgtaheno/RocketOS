@@ -4,6 +4,10 @@ MAVLinkTelemetry::MAVLinkTelemetry()
 {
     systemId = 1;
     componentId = MAV_COMP_ID_AUTOPILOT1;
+
+    lastAltitude = 0.0f;
+    lastAltitudeTime = 0;
+    climbRateInitialized = false;
 }
 
 void MAVLinkTelemetry::begin()
@@ -235,6 +239,93 @@ void MAVLinkTelemetry::sendBatteryStatus(
 #endif
 }
 
+void MAVLinkTelemetry::sendGlobalPositionInt(
+    double latitude,
+    double longitude,
+    float gpsAltitude,
+    float relativeAltitude,
+    float speedKmh)
+{
+    mavlink_message_t msg;
+
+    uint32_t timeBootMs = millis();
+
+    int32_t lat =
+        (int32_t)(latitude * 10000000.0);
+
+    int32_t lon =
+        (int32_t)(longitude * 10000000.0);
+
+    // Altitudes are expressed in millimetres.
+    int32_t alt =
+        (int32_t)(gpsAltitude * 1000.0f);
+
+    // MAVLink GLOBAL_POSITION_INT.relative_alt is the
+    // altitude above the home position, not above sea level.
+    int32_t relAlt =
+        (int32_t)(relativeAltitude * 1000.0f);
+
+    // Velocity components are expressed in cm/s.
+    int16_t vx =
+        (int16_t)((speedKmh / 3.6f) * 100.0f);
+
+    int16_t vy = 0;
+    int16_t vz = 0;
+
+    // Heading is expressed in centi-degrees.
+    // UINT16_MAX indicates unknown heading.
+    uint16_t hdg = UINT16_MAX;
+
+    mavlink_msg_global_position_int_pack(
+        systemId,
+        componentId,
+        &msg,
+        timeBootMs,
+        lat,
+        lon,
+        alt,
+        relAlt,
+        vx,
+        vy,
+        vz,
+        hdg);
+
+    uint8_t buffer[MAVLINK_MAX_PACKET_LEN];
+
+    uint16_t len =
+        mavlink_msg_to_send_buffer(
+            buffer,
+            &msg);
+
+    Serial.write(
+        buffer,
+        len);
+
+#if PRINT_TELEMETRY_TO_SERIAL
+
+    Serial.println();
+    Serial.println("===== MAVLINK GLOBAL_POSITION_INT =====");
+
+    Serial.print("Lat        : ");
+    Serial.println(latitude, 6);
+
+    Serial.print("Lon        : ");
+    Serial.println(longitude, 6);
+
+    Serial.print("GPS Alt    : ");
+    Serial.print(gpsAltitude, 1);
+    Serial.println(" m");
+
+    Serial.print("Relative   : ");
+    Serial.print(relativeAltitude, 2);
+    Serial.println(" m");
+
+    Serial.println("=======================================");
+    Serial.println();
+
+#endif
+}
+
 void MAVLinkTelemetry::sendGlobalPositionIntCov(
     double latitude,
     double longitude,
@@ -421,6 +512,111 @@ void MAVLinkTelemetry::sendSysStatus(
     Serial.println(connected ? "YES" : "NO");
 
     Serial.println("==============================");
+    Serial.println();
+
+#endif
+}
+
+void MAVLinkTelemetry::sendVFRHUD(
+    float groundSpeedKmh,
+    float altitude,
+    float heading)
+{
+    mavlink_message_t msg;
+
+    uint32_t now = millis();
+
+    // Climb rate estimation from successive altitude samples.
+    // MAVLink VFR_HUD.climb is expressed in m/s.
+    float climbRate = 0.0f;
+
+    if (climbRateInitialized)
+    {
+        uint32_t deltaTimeMs =
+            now - lastAltitudeTime;
+
+        if (deltaTimeMs > 0)
+        {
+            float deltaAltitude =
+                altitude - lastAltitude;
+
+            climbRate =
+                deltaAltitude / (deltaTimeMs / 1000.0f);
+        }
+    }
+    else
+    {
+        climbRateInitialized = true;
+    }
+
+    lastAltitude = altitude;
+    lastAltitudeTime = now;
+
+    // MAVLink VFR_HUD.groundspeed is expressed in m/s.
+    float groundSpeedMs =
+        groundSpeedKmh / 3.6f;
+
+    // Airspeed is not measured by this platform.
+    float airspeed = 0.0f;
+
+    // MAVLink VFR_HUD.heading is expressed in degrees (0 to 359).
+    int16_t headingDeg =
+        (int16_t)heading;
+
+    if (headingDeg < 0)
+    {
+        headingDeg += 360;
+    }
+
+    headingDeg = headingDeg % 360;
+
+    // Throttle is not applicable to this platform.
+    uint16_t throttle = 0;
+
+    mavlink_msg_vfr_hud_pack(
+        systemId,
+        componentId,
+        &msg,
+        airspeed,
+        groundSpeedMs,
+        headingDeg,
+        throttle,
+        altitude,
+        climbRate);
+
+    uint8_t buffer[MAVLINK_MAX_PACKET_LEN];
+
+    uint16_t len =
+        mavlink_msg_to_send_buffer(
+            buffer,
+            &msg);
+
+    Serial.write(
+        buffer,
+        len);
+
+#if PRINT_TELEMETRY_TO_SERIAL
+
+    Serial.println();
+    Serial.println("===== MAVLINK VFR_HUD =====");
+
+    Serial.print("Ground Speed : ");
+    Serial.print(groundSpeedMs, 2);
+    Serial.println(" m/s");
+
+    Serial.print("Altitude     : ");
+    Serial.print(altitude, 2);
+    Serial.println(" m");
+
+    Serial.print("Climb Rate   : ");
+    Serial.print(climbRate, 2);
+    Serial.println(" m/s");
+
+    Serial.print("Heading      : ");
+    Serial.print(headingDeg);
+    Serial.println(" deg");
+
+    Serial.println("===========================");
     Serial.println();
 
 #endif
