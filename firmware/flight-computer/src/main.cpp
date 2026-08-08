@@ -42,6 +42,15 @@ bool gpsReferenceCaptured = false;
 float gpsReferenceAltitude = 0.0f;
 
 // --------------------------------------------------
+// Home Position (MAVLink)
+// --------------------------------------------------
+
+double gpsHomeLatitude = 0.0;
+double gpsHomeLongitude = 0.0;
+bool homePositionSent = false;
+unsigned long lastHomePosition = 0;
+
+// --------------------------------------------------
 // GPS Health State Tracking
 // --------------------------------------------------
 
@@ -712,6 +721,19 @@ void loop()
             mavGpsSpeed,
             mavRelativeAltitude,
             0.0f);
+
+        // Re-emit HOME_POSITION every 5 seconds once captured.
+        // Some QGroundControl versions request it periodically.
+        if (homePositionSent &&
+            millis() - lastHomePosition >= 5000)
+        {
+            lastHomePosition = millis();
+
+            mavlink.sendHomePosition(
+                gpsHomeLatitude,
+                gpsHomeLongitude,
+                gpsReferenceAltitude);
+        }
     }
  
     if (millis() - lastLog >= LOG_INTERVAL_MS)
@@ -829,17 +851,29 @@ void loop()
 #endif
 
         // --------------------------------------------------
-        // Capture GPS Reference Altitude
+        // Capture GPS Reference Altitude and Home Position
         // --------------------------------------------------
 
         if (gpsFix && !gpsReferenceCaptured)
         {
             gpsReferenceAltitude = gpsAltitude;
+            gpsHomeLatitude = latitude;
+            gpsHomeLongitude = longitude;
             gpsReferenceCaptured = true;
 
             Serial.print("[INFO] GPS reference altitude captured: ");
             Serial.print(gpsReferenceAltitude, 1);
             Serial.println(" m");
+
+            // Send HOME_POSITION once, as soon as the reference
+            // point is captured on the first GPS fix.
+            mavlink.sendHomePosition(
+                gpsHomeLatitude,
+                gpsHomeLongitude,
+                gpsReferenceAltitude);
+
+            homePositionSent = true;
+            lastHomePosition = millis();
         }
 
         // --------------------------------------------------

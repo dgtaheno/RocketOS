@@ -52,6 +52,11 @@ public:
         float relativeAltitude,
         float speedKmh);
 
+    void sendHomePosition(
+        double latitude,
+        double longitude,
+        float altitude);
+
 private:
     uint8_t systemId;
     uint8_t componentId;

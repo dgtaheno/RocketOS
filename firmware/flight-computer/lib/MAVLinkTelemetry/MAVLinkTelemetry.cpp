@@ -621,3 +621,84 @@ void MAVLinkTelemetry::sendVFRHUD(
 
 #endif
 }
+
+void MAVLinkTelemetry::sendHomePosition(
+    double latitude,
+    double longitude,
+    float altitude)
+{
+    mavlink_message_t msg;
+
+    int32_t lat =
+        (int32_t)(latitude * 10000000.0);
+
+    int32_t lon =
+        (int32_t)(longitude * 10000000.0);
+
+    // Altitude is expressed in millimetres (MSL).
+    int32_t alt =
+        (int32_t)(altitude * 1000.0f);
+
+    // Local position of home is unused on this platform.
+    float x = 0.0f;
+    float y = 0.0f;
+    float z = 0.0f;
+
+    // Identity quaternion (no orientation reference).
+    float q[4] = {1.0f, 0.0f, 0.0f, 0.0f};
+
+    // Approach vector is used for automated landing only.
+    float approachX = 0.0f;
+    float approachY = 0.0f;
+    float approachZ = 0.0f;
+
+    uint64_t timeUsec =
+        millis() * 1000ULL;
+
+    mavlink_msg_home_position_pack(
+        systemId,
+        componentId,
+        &msg,
+        lat,
+        lon,
+        alt,
+        x,
+        y,
+        z,
+        q,
+        approachX,
+        approachY,
+        approachZ,
+        timeUsec);
+
+    uint8_t buffer[MAVLINK_MAX_PACKET_LEN];
+
+    uint16_t len =
+        mavlink_msg_to_send_buffer(
+            buffer,
+            &msg);
+
+    Serial.write(
+        buffer,
+        len);
+
+#if PRINT_TELEMETRY_TO_SERIAL
+
+    Serial.println();
+    Serial.println("===== MAVLINK HOME_POSITION =====");
+
+    Serial.print("Lat : ");
+    Serial.println(latitude, 6);
+
+    Serial.print("Lon : ");
+    Serial.println(longitude, 6);
+
+    Serial.print("Alt : ");
+    Serial.print(altitude, 1);
+    Serial.println(" m");
+
+    Serial.println("=================================");
+    Serial.println();
+
+#endif
+}
