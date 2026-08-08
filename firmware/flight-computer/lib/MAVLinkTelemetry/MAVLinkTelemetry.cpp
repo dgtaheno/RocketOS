@@ -1,4 +1,5 @@
 #include "MAVLinkTelemetry.h"
+#include <string.h>
 
 MAVLinkTelemetry::MAVLinkTelemetry()
 {
@@ -699,6 +700,40 @@ void MAVLinkTelemetry::sendHomePosition(
 
     Serial.println("=================================");
     Serial.println();
+
+#endif
+}
+
+void MAVLinkTelemetry::sendStatusText(
+    uint8_t severity,
+    const char* text)
+{
+    mavlink_message_t msg;
+
+    // MAVLink STATUSTEXT carries up to 50 characters.
+    char buffer[50] = {0};
+    strncpy(buffer, text, sizeof(buffer) - 1);
+
+    mavlink_msg_statustext_pack(
+        systemId,
+        componentId,
+        &msg,
+        severity,
+        buffer,
+        0,   // id (0 = not a chunked message)
+        0);  // chunk_seq
+
+    uint8_t out[MAVLINK_MAX_PACKET_LEN];
+
+    uint16_t len =
+        mavlink_msg_to_send_buffer(out, &msg);
+
+    Serial.write(out, len);
+
+#if PRINT_TELEMETRY_TO_SERIAL
+
+    Serial.print("[MAVLINK] STATUSTEXT: ");
+    Serial.println(text);
 
 #endif
 }

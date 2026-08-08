@@ -27,6 +27,7 @@ BufferedLogger telemetryBuffer;
 INA219Sensor ina219Sensor;
 BatteryMonitor batteryMonitor;
 MAVLinkTelemetry mavlink;
+FlightStateMachine flightState;
 
 // --------------------------------------------------
 // Timing
@@ -613,6 +614,7 @@ void setup()
         EVENT_SYSTEM_READY);
 
     health.printStatus();
+
 #if FLIGHT_SIMULATION_MODE
 
     Serial.println();
@@ -837,6 +839,44 @@ void loop()
         float temperature = bmp.getTemperature();
         float pressure = bmp.getPressure();
         float bmpAltitude = bmp.getRelativeAltitude();
+
+        // --------------------------------------------------
+        // Flight State Machine (barometric, autonomous)
+        //
+        // Fed from the barometric relative altitude so it
+        // operates independently of GPS fix. Detects launch,
+        // burnout, apogee, descent and landing, and reports
+        // each transition to the ground station via STATUSTEXT.
+        // --------------------------------------------------
+
+        flightState.update(bmpAltitude, millis());
+
+        if (flightState.hasStateChanged())
+        {
+            const char* stateName =
+                flightState.getStateString();
+
+            Serial.print("[FLIGHT] State -> ");
+            Serial.println(stateName);
+
+            char flightMsg[50];
+
+            if (flightState.getState() == FLIGHT_APOGEE)
+            {
+                snprintf(flightMsg, sizeof(flightMsg),
+                    "APOGEE DETECTED - %.1f m",
+                    flightState.getApogeeAltitude());
+            }
+            else
+            {
+                snprintf(flightMsg, sizeof(flightMsg),
+                    "FLIGHT STATE: %s",
+                    stateName);
+            }
+
+            // MAV_SEVERITY_INFO = 6
+            mavlink.sendStatusText(6, flightMsg);
+        }
 
         // --------------------------------------------------
         // INA219 Update
@@ -1080,6 +1120,9 @@ void loop()
         Serial.print("BMP Alt     : ");
         Serial.print(bmpAltitude, 2);
         Serial.println(" m");
+
+        Serial.print("Flight State: ");
+        Serial.println(flightState.getStateString());
 
         Serial.println();
 

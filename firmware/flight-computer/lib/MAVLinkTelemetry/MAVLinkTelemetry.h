@@ -57,6 +57,10 @@ public:
         double longitude,
         float altitude);
 
+    void sendStatusText(
+        uint8_t severity,
+        const char* text);
+
 private:
     uint8_t systemId;
     uint8_t componentId;

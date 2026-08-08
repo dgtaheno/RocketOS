@@ -114,4 +114,4 @@
 // Runs a synthetic flight profile through the
 // FlightStateMachine at boot instead of normal operation.
 // Set to 0 for normal flight.
-#define FLIGHT_SIMULATION_MODE 1
+#define FLIGHT_SIMULATION_MODE 0
