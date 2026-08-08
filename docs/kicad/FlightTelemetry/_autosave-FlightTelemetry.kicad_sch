@@ -6402,7 +6402,7 @@
 				)
 			)
 		)
-		(property "Value" "+5V_BUS"
+		(property "Value" "+3.3V_BUS"
 			(at 210.82 146.0499 90)
 			(show_name no)
 			(do_not_autoplace no)
