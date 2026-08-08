@@ -1,6 +1,6 @@
 # 🚀 Flight Telemetry & Data Logger
 
-ESP32-based flight computer featuring GPS telemetry, altitude estimation, battery monitoring, MAVLink telemetry, ground station instrumentation and fault-tolerant flight data logging.
+ESP32-based flight computer featuring GPS telemetry, altitude estimation, battery monitoring, MAVLink telemetry, autonomous flight event detection and fault-tolerant flight data logging.
 
 ![Project Banner](docs/images/banner.png)
 
@@ -11,7 +11,8 @@ ESP32-based flight computer featuring GPS telemetry, altitude estimation, batter
 ![Battery](https://img.shields.io/badge/Battery-LiPo_4S-red)
 ![MAVLink](https://img.shields.io/badge/MAVLink-Telemetry-success)
 ![QGroundControl](https://img.shields.io/badge/QGroundControl-Validated-success)
-![Status](https://img.shields.io/badge/Status-Sprint11.6-blue)
+![Tests](https://img.shields.io/badge/Tests-6_passing-brightgreen)
+![Status](https://img.shields.io/badge/Status-Sprint12-blue)
 ![Language](https://img.shields.io/badge/Language-C%2B%2B-blue)
 ![PlatformIO](https://img.shields.io/badge/PlatformIO-Enabled-success)
 
@@ -54,7 +55,7 @@ Hardware platform used during validation testing.
 
 # Overview
 
-Flight Telemetry & Data Logger is a modular ESP32-based flight computer designed for telemetry acquisition, altitude estimation, power monitoring, ground station interoperability and reliable flight data recording.
+Flight Telemetry & Data Logger is a modular ESP32-based flight computer for model rocketry, designed for telemetry acquisition, altitude estimation, power monitoring, autonomous flight event detection, ground station interoperability and reliable flight data recording.
 
 The project combines:
 
@@ -63,16 +64,107 @@ The project combines:
 - Battery monitoring
 - MAVLink telemetry
 - Ground station instrumentation
+- Autonomous flight event detection
 - Runtime health monitoring
 - Event-driven diagnostics
 - Fault-tolerant SD logging
 - Buffered telemetry recovery
+- Unit-tested flight logic
 
 All features included in this repository have been validated on real hardware.
 
 ---
 
+# Scope
+
+This flight computer targets **model rocketry**.
+
+The flight state machine models a **ballistic flight profile** with parachute
+recovery: powered boost, unpowered coast, a single apogee, and descent under
+recovery. Powered controlled vehicles such as multirotors or fixed-wing aircraft
+are out of scope by design.
+
+---
+
+# Flight Event Detection
+
+Sprint 12 introduced an autonomous flight state machine that detects the phases
+of a rocket flight from barometric altitude, independently of GPS fix.
+
+## Flight states
+
+```text
+IDLE -> BOOST -> COAST -> APOGEE -> DESCENT -> LANDED
+```
+
+| State | Detection |
+|--------|-----------|
+| IDLE | On the pad, waiting |
+| BOOST | Rapid climb above launch threshold |
+| COAST | Climb rate stops increasing (motor burnout) |
+| APOGEE | Climb rate crosses zero at altitude |
+| DESCENT | Sustained negative climb rate |
+| LANDED | At rest on the ground |
+
+Detection uses the BMP388 barometric altitude with a low-pass filtered climb
+rate and multi-sample confirmation to reject sensor noise. Each detected event
+is reported to the ground station as a MAVLink STATUSTEXT message.
+
+![Flight Events in QGroundControl](docs/images/qgc-flight-events.png)
+
+*Flight event sequence reported to QGroundControl via MAVLink STATUSTEXT, including the on-board computed apogee altitude (69.5 m) from a synthetic flight profile.*
+
+---
+
+# Unit Testing
+
+The flight state machine is covered by unit tests running on the host PC through
+the PlatformIO `native` environment with GoogleTest, independently of the ESP32.
+
+```text
+FlightStateMachine.FullFlightSequence            [PASSED]
+FlightStateMachine.IgnoresBarometricNoiseAtIdle  [PASSED]
+FlightStateMachine.DoesNotLaunchOnSlowRise       [PASSED]
+FlightStateMachine.LaunchesOnFastRise            [PASSED]
+FlightStateMachine.ApogeeAltitudeMatchesPeak     [PASSED]
+FlightStateMachine.ResetReturnsToIdle            [PASSED]
+
+6 test cases: 6 succeeded
+```
+
+Run the tests with:
+
+```bash
+pio test -e native
+```
+
+---
+
 # Features
+
+## Flight Event Detection
+
+✅ Flight State Machine (IDLE → BOOST → COAST → APOGEE → DESCENT → LANDED)
+
+✅ Barometric, GPS-Independent Detection
+
+✅ Launch Detection
+
+✅ Motor Burnout Detection
+
+✅ Apogee Detection
+
+✅ Descent Detection
+
+✅ Landing Detection
+
+✅ Climb Rate Estimation with Noise Rejection
+
+✅ MAVLink STATUSTEXT Event Reporting
+
+✅ GoogleTest Unit Tests
+
+---
 
 ## Telemetry
 
@@ -184,6 +276,8 @@ All features included in this repository have been validated on real hardware.
 
 ✅ HOME_POSITION
 
+✅ STATUSTEXT
+
 ✅ QGroundControl Integration
 
 ---
@@ -202,79 +296,7 @@ Current MAVLink implementation validated on real hardware:
 | VFR_HUD | 74 | Ground speed, altitude, climb rate | ✅ |
 | BATTERY_STATUS | 147 | Battery voltage, current and SOC | ✅ |
 | HOME_POSITION | 242 | Home reference and distance to home | ✅ |
-
-Runtime validation confirmed:
-
-```text
-Vehicle Detected by QGroundControl
-
-Battery Connected
-
-GPS Fix Acquired
-
-Relative Altitude Reported
-
-Ground Speed Reported
-
-Climb Rate Reported
-
-Home Reference Set
-
-System Healthy = YES
-
-Fault Flags = 0x00
-
-No Brownout Detected
-
-No Watchdog Resets
-
-No System Regression
-```
-
----
-
-# QGroundControl Validation
-
-Sprint 11 introduced Ground Control Station compatibility through the MAVLink protocol.
-
-The Flight Telemetry & Data Logger successfully establishes a live connection with QGroundControl running on a ground station PC.
-
-Validated functionality:
-
-✅ Vehicle Detection
-
-✅ MAVLink Communication
-
-✅ GPS Telemetry Reception
-
-✅ Battery Status Reception
-
-✅ System Status Reception
-
-✅ Relative Altitude Instrumentation
-
-✅ Ground Speed Instrumentation
-
-✅ Climb Rate Instrumentation
-
-✅ Home Marker and Distance to Home
-
-✅ Real-Time Telemetry Streaming
-
-![QGroundControl Validation](docs/images/qgroundcontrol-validation.png)
-
-*QGroundControl establishing a live MAVLink connection with the ESP32 flight computer.*
-
-![QGroundControl Flight Instruments](docs/images/qgc-flight-instruments.png)
-
-*Flight instrumentation reported through GLOBAL_POSITION_INT and VFR_HUD: relative altitude, climb rate and ground speed. Residual values are consistent with BMP388 sensor noise under stationary conditions.*
-
-| Instrument | Source Message | Field | Reported |
-|-------------|----------------|--------|----------|
-| Relative Altitude | GLOBAL_POSITION_INT | relative_alt | 1.3 m |
-| Climb Rate | VFR_HUD | climb | 0.0 m/s |
-| Ground Speed | VFR_HUD | groundspeed | 0.0 m/s |
-| Distance to Home | HOME_POSITION | home reference | 3.6 m |
+| STATUSTEXT | 253 | Flight event reporting | ✅ |
 
 ---
 
@@ -292,6 +314,8 @@ ESP32 DevKitC V4
 ├── SystemHealth
 ├── SystemEvents
 ├── MAVLinkTelemetry
+├── FlightStateMachine
+├── FlightSimulator
 └── Flight Logger
 ```
 
@@ -323,16 +347,6 @@ BATTERY_CRITICAL
 BUFFER_FLUSH_COMPLETED
 ```
 
-Example:
-
-```text
-[EVENT] BATTERY_CONNECTED
-
-[EVENT] GPS_FIX_ACQUIRED
-
-[EVENT] SD_RECOVERED
-```
-
 ---
 
 # Generated Telemetry
@@ -355,6 +369,8 @@ Climb Rate
 Home Reference
 
 Distance to Home
+
+Flight State
 
 Battery Voltage
 
@@ -440,11 +456,21 @@ Validated on real hardware:
 
 ✅ MAVLink HOME_POSITION Validation
 
+✅ MAVLink STATUSTEXT Validation
+
 ✅ Relative Altitude Validation
 
 ✅ Climb Rate Validation
 
 ✅ Distance to Home Validation
+
+✅ Flight State Machine Unit Tests (6/6)
+
+✅ Flight Simulation Validation
+
+✅ Real Sensor Robustness Validation (no false positives)
+
+✅ Flight Event Detection Validation
 
 ✅ Ground Station Instrument Validation
 
@@ -461,9 +487,9 @@ Validated on real hardware:
 ```text
 Current Development Stage
 
-Sprint 11.6
+Sprint 12
 
-Flight Instrumentation & Home Reference
+Flight Event Detection
 
 Validated on Real Hardware
 ```
@@ -476,6 +502,8 @@ GPS Telemetry
 Barometric Altitude Estimation
 
 Climb Rate Estimation
+
+Autonomous Flight Event Detection
 
 Battery Monitoring
 
@@ -490,6 +518,8 @@ Ground Station Instrumentation
 Home Reference & Distance to Home
 
 QGroundControl Connectivity
+
+Unit-Tested Flight Logic
 ```
 
 ---
@@ -505,6 +535,8 @@ docs/TestReport_Sprint10.md
 
 docs/TestReport_Sprint11.md
 
+docs/TestReport_Sprint12.md
+
 docs/schematics/
 
 docs/images/
@@ -515,9 +547,9 @@ docs/images/
 # Next Milestones
 
 ```text
-Flight Event Detection
+Recovery Deployment Output
 
-Launch & Apogee Algorithms
+Flight Data Analysis Tools
 
 ATTITUDE Telemetry
 
@@ -525,9 +557,7 @@ FreeRTOS Architecture
 
 Long-Range Telemetry
 
-PX4 Interoperability
-
-ArduPilot Interoperability
+Field Test Campaign
 ```
 
 ---
