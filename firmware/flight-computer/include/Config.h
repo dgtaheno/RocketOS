@@ -110,3 +110,8 @@
 
 #define PRINT_TELEMETRY_TO_SERIAL      true
 #define PRINT_HEALTH_TO_SERIAL         true
+
+// Runs a synthetic flight profile through the
+// FlightStateMachine at boot instead of normal operation.
+// Set to 0 for normal flight.
+#define FLIGHT_SIMULATION_MODE 1

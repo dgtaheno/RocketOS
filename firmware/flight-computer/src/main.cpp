@@ -11,6 +11,8 @@
 #include "INA219Sensor.h"
 #include "BatteryMonitor.h"
 #include "MAVLinkTelemetry.h"
+#include "FlightStateMachine.h"
+#include "FlightSimulator.h"
 
 // --------------------------------------------------
 // System Modules
@@ -611,6 +613,74 @@ void setup()
         EVENT_SYSTEM_READY);
 
     health.printStatus();
+#if FLIGHT_SIMULATION_MODE
+
+    Serial.println();
+    Serial.println("===== FLIGHT SIMULATION =====");
+
+    FlightSimulator sim;
+    FlightStateMachine fsm;
+
+    sim.reset();
+    fsm.reset();
+
+    uint32_t simTimeMs = 0;
+    const uint32_t stepMs = 100;   // 10 Hz
+
+    // Flight phase.
+    while (!sim.isFinished() && simTimeMs < 30000)
+    {
+        float alt = sim.step(stepMs);
+        simTimeMs += stepMs;
+
+        fsm.update(alt, simTimeMs);
+
+        if (fsm.hasStateChanged())
+        {
+            Serial.print("[");
+            Serial.print(simTimeMs / 1000.0f, 1);
+            Serial.print(" s] -> ");
+            Serial.print(fsm.getStateString());
+            Serial.print("  | alt = ");
+            Serial.print(alt, 1);
+            Serial.print(" m | climb = ");
+            Serial.print(fsm.getClimbRate(), 1);
+            Serial.println(" m/s");
+        }
+    }
+
+    // Resting-on-ground phase, so LANDED can confirm.
+    for (int i = 0; i < 20; i++)
+    {
+        simTimeMs += stepMs;
+        fsm.update(0.0f, simTimeMs);
+
+        if (fsm.hasStateChanged())
+        {
+            Serial.print("[");
+            Serial.print(simTimeMs / 1000.0f, 1);
+            Serial.print(" s] -> ");
+            Serial.print(fsm.getStateString());
+            Serial.println("  | on ground");
+        }
+    }
+
+    Serial.println("-----------------------------");
+    Serial.print("Apogee altitude : ");
+    Serial.print(fsm.getApogeeAltitude(), 1);
+    Serial.println(" m");
+
+    Serial.print("Max altitude    : ");
+    Serial.print(fsm.getMaxAltitude(), 1);
+    Serial.println(" m");
+
+    Serial.print("Final state     : ");
+    Serial.println(fsm.getStateString());
+
+    Serial.println("=============================");
+    Serial.println();
+
+#endif
 }
 
 // --------------------------------------------------
