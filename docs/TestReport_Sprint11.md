@@ -5,9 +5,9 @@
 
 **Project:** Flight Telemetry & Data Logger  
 **Repository:** flight-telemetry-data-logger  
-**Sprint:** 11 (including 11.2, 11.3, 11.3.1 and 11.4)  
-**Release:** v0.11.0 / v0.11.1  
-**Date:** July 2026  
+**Sprint:** 11 (including 11.2, 11.3, 11.3.1, 11.4 and 11.6)  
+**Release:** v0.11.0 / v0.11.1 / v0.11.2  
+**Date:** July–August 2026  
 **Author:** David Garcia-Taheño
 
 ---
@@ -26,6 +26,7 @@ This sprint focused on:
 - BATTERY_STATUS implementation
 - SYS_STATUS implementation
 - VFR_HUD implementation
+- HOME_POSITION implementation
 - Climb rate estimation
 - QGroundControl integration and live validation
 - Correction of invalid battery pack voltage reporting
@@ -57,7 +58,7 @@ This sprint focused on:
 | ESP32 Arduino Framework | Current |
 | MAVLink C Library | common dialect (includes standard dialect) |
 | QGroundControl | Installed and validated |
-| Firmware Branches | sprint11-rocket-flight-development, sprint11.4-flight-instrumentation |
+| Firmware Branches | sprint11-rocket-flight-development, sprint11.4-flight-instrumentation, sprint11.6-home-position |
 
 ---
 
@@ -214,7 +215,31 @@ climbRate = (altitude - lastAltitude) / deltaTimeSeconds
 
 ---
 
-## 8. Serial MAVLink Stream
+## 8. HOME_POSITION
+
+### Description
+
+Home reference position consumed by QGroundControl to display the home marker and compute Distance to Home.
+
+### Parameters Included
+
+- Latitude / longitude (first GPS fix position)
+- Altitude (GPS reference altitude, MSL)
+- Local position x, y, z (0, not used)
+- Quaternion (identity: 1, 0, 0, 0)
+- Approach vector (0, not used)
+
+### Behaviour
+
+HOME_POSITION is captured and sent once, at the moment of the first GPS fix, reusing the existing GPS reference-altitude capture point. It is then re-emitted every 5 seconds, as some QGroundControl versions request the message periodically.
+
+### Result
+
+✅ Home marker displayed and Distance to Home computed in QGroundControl
+
+---
+
+## 9. Serial MAVLink Stream
 
 ### Description
 
@@ -228,7 +253,7 @@ No communication lockups detected.
 
 ---
 
-## 9. QGroundControl Integration
+## 10. QGroundControl Integration
 
 ### Description
 
@@ -244,6 +269,7 @@ QGroundControl was installed and connected to the ESP32 flight computer over the
 - Relative altitude instrumentation
 - Ground speed instrumentation
 - Climb rate instrumentation
+- Home marker and Distance to Home
 
 ### Result
 
@@ -306,4 +332,503 @@ QGroundControl reported **0.0 m** relative altitude despite valid barometric and
 
 GLOBAL_POSITION_INT_COV was transmitted instead of GLOBAL_POSITION_INT. QGroundControl populates its relative altitude indicator exclusively from `GLOBAL_POSITION_INT.relative_alt`.
 
-Initial searches for `mavlink_msg_global_position_int.h` within the common 
+Initial searches for `mavlink_msg_global_position_int.h` within the common dialect returned no results, suggesting an incomplete library installation.
+
+Further analysis showed the message is **not defined in common.xml**. GLOBAL_POSITION_INT (ID 33) belongs to the **standard dialect**, which common.xml includes.
+
+This explains the apparent inconsistency observed during diagnosis:
+
+```text
+common.h  MAVLINK_MESSAGE_CRCS   {33, 104, 28, 28, 0, 0, 0}   present
+common.h  MAVLINK_MESSAGE_INFO   GLOBAL_POSITION_INT          present
+common.h  MAVLINK_MESSAGE_NAMES  { "GLOBAL_POSITION_INT", 33 } present
+common/   header file                                         absent
+```
+
+The message tables aggregate all messages from included dialects, while the header include resides in the dialect that defines the message.
+
+The header was already available at `lib/MAVLink/standard/`, reachable through common.h line 3230:
+
+```c
+#include "../standard/standard.h"
+```
+
+## Resolution
+
+No library modification required.
+
+`sendGlobalPositionInt()` was implemented using the existing dialect include chain.
+
+`relative_alt` is populated from the barometric relative altitude rather than absolute altitude, as MAVLink defines this field as height above home, not above mean sea level.
+
+**Defect Status:** ✅ RESOLVED
+
+---
+
+# Defect Report – Residual Ground Speed
+
+## Issue
+
+QGroundControl displayed **0.6 m/s** ground speed while the vehicle was stationary on a workbench.
+
+## Root Cause
+
+The GPS speed deadband defined in `Config.h` was applied only within the logging path. The MAVLink transmission path used raw GPS speed values.
+
+```text
+GPS_SPEED_DEADBAND_KMH = 3.0
+
+0.6 m/s = 2.16 km/h  (below threshold, never filtered)
+```
+
+## Fix
+
+Deadband applied to the MAVLink transmission path before message encoding, ensuring consistency between logged and transmitted telemetry.
+
+**Defect Status:** ✅ RESOLVED
+
+---
+
+# Sprint 11.6 – HOME_POSITION
+
+## Objective
+
+Transmit HOME_POSITION so QGroundControl can display the home marker and compute Distance to Home.
+
+## Implementation
+
+HOME_POSITION is captured and sent once, at the moment of the first GPS fix, reusing the existing GPS reference-altitude capture point. The home latitude, longitude and reference altitude are stored and re-emitted every 5 seconds, as some QGroundControl versions request the message periodically.
+
+## Message
+
+| Field | Value |
+|--------|--------|
+| latitude / longitude | First GPS fix position |
+| altitude | GPS reference altitude (MSL) |
+| local position (x, y, z) | 0 (not used) |
+| quaternion | Identity (1, 0, 0, 0) |
+| approach vector | 0 (not used) |
+
+## Validation
+
+Captured on first fix:
+
+```text
+[EVENT] GPS_FIX_ACQUIRED
+[INFO] GPS reference altitude captured: 9.0 m
+===== MAVLINK HOME_POSITION =====
+```
+
+QGroundControl result:
+
+| Indicator | Before | After |
+|------------|--------|-------|
+| Home marker | absent | displayed |
+| Distance to Home | --.-- m | 3.6 m |
+
+The 3.6 m reflects GPS drift between the captured home point and the current position while stationary.
+
+**Status:** ✅ RESOLVED
+
+---
+
+# Functional Tests
+
+## Test 1 – Firmware Compilation
+
+### Procedure
+
+Compile complete firmware project.
+
+### Expected Result
+
+Successful build without errors.
+
+### Actual Result
+
+✅ PASS
+
+Project compiled successfully.
+
+---
+
+## Test 2 – Power-On Self Test
+
+### Procedure
+
+Power up ESP32 system and observe POST sequence.
+
+### Expected Result
+
+All subsystems pass initialization.
+
+### Actual Result
+
+✅ PASS
+
+```text
+[PASS] BufferedLogger
+[PASS] BMP388 sensor
+[PASS] INA219 sensor
+[PASS] SD card
+[PASS] GPS receiver
+[PASS] Flight log created
+
+All systems passed
+System READY
+```
+
+---
+
+## Test 3 – HEARTBEAT Transmission
+
+### Procedure
+
+Monitor MAVLink output.
+
+### Expected Result
+
+HEARTBEAT message every second.
+
+### Actual Result
+
+✅ PASS
+
+Consistent periodic transmission observed.
+
+---
+
+## Test 4 – GPS Acquisition
+
+### Procedure
+
+Wait for GPS lock outdoors with clear sky view.
+
+### Expected Result
+
+Valid GPS fix and stable position.
+
+### Actual Result
+
+✅ PASS
+
+```text
+GPS Detected: YES
+GPS Fix     : YES
+Latitude    : 53.665018
+Longitude   : 10.233344
+GPS Alt     : 9.0 m
+```
+
+Indoor testing produced NO_FIX as expected, due to signal attenuation.
+
+---
+
+## Test 5 – GPS_RAW_INT Generation
+
+### Procedure
+
+Inspect transmitted MAVLink messages.
+
+### Expected Result
+
+GPS position encoded into GPS_RAW_INT.
+
+### Actual Result
+
+✅ PASS
+
+Messages generated correctly.
+
+---
+
+## Test 6 – GLOBAL_POSITION_INT_COV Generation
+
+### Procedure
+
+Monitor generated position messages.
+
+### Expected Result
+
+Position data available through MAVLink.
+
+### Actual Result
+
+✅ PASS
+
+Vehicle position displayed on the QGroundControl map.
+
+---
+
+## Test 7 – GLOBAL_POSITION_INT Generation
+
+### Procedure
+
+Monitor the relative altitude indicator in QGroundControl.
+
+### Expected Result
+
+Relative altitude reported and updated in real time.
+
+### Actual Result
+
+✅ PASS
+
+```text
+Altitude (Relative) : 0.4 m
+```
+
+Value consistent with BMP388 drift under stationary conditions.
+
+---
+
+## Test 8 – BATTERY_STATUS Generation
+
+### Procedure
+
+Compare INA219 serial output against QGroundControl battery panel.
+
+### Expected Result
+
+Battery voltage, current and SOC consistent between both sources.
+
+### Actual Result
+
+✅ PASS (after Sprint 11.3.1 fix)
+
+```text
+Charge State : Ok
+Remaining    : 62 %
+Voltage      : 15.30 V
+```
+
+---
+
+## Test 9 – SYS_STATUS Generation
+
+### Procedure
+
+Monitor SYS_STATUS reception in QGroundControl.
+
+### Expected Result
+
+Battery and system status available.
+
+### Actual Result
+
+✅ PASS
+
+---
+
+## Test 10 – VFR_HUD Generation
+
+### Procedure
+
+Monitor ground speed and climb rate indicators in QGroundControl.
+
+### Expected Result
+
+Instrument values populated and responsive.
+
+### Actual Result
+
+✅ PASS
+
+```text
+Ground Speed : 0.0 m/s
+Climb Rate   : -0.1 m/s
+```
+
+Climb rate fluctuation consistent with barometric sensor noise.
+
+---
+
+## Test 11 – HOME_POSITION Generation
+
+### Procedure
+
+Acquire GPS fix and observe the home marker and Distance to Home in QGroundControl.
+
+### Expected Result
+
+Home marker displayed and Distance to Home computed.
+
+### Actual Result
+
+✅ PASS
+
+```text
+[INFO] GPS reference altitude captured: 9.0 m
+Distance to Home : 3.6 m
+```
+
+Home marker displayed at the captured reference position.
+
+---
+
+## Test 12 – GPS Speed Deadband
+
+### Procedure
+
+Observe ground speed indicator while the vehicle is stationary.
+
+### Expected Result
+
+Zero ground speed reported.
+
+### Actual Result
+
+✅ PASS (after Sprint 11.4 fix)
+
+```text
+Before : 0.6 m/s
+After  : 0.0 m/s
+```
+
+---
+
+## Test 13 – QGroundControl Vehicle Detection
+
+### Procedure
+
+Connect ESP32 to QGroundControl over serial MAVLink.
+
+### Expected Result
+
+Vehicle detected and telemetry displayed.
+
+### Actual Result
+
+✅ PASS
+
+Vehicle detected, GPS position plotted, battery data, flight instruments and home marker displayed.
+
+---
+
+## Test 14 – Continuous Operation
+
+### Procedure
+
+Run firmware for extended period.
+
+### Expected Result
+
+Stable telemetry operation.
+
+### Actual Result
+
+✅ PASS
+
+```text
+Fault Flags   : 0x00
+System Healthy: YES
+SD Failures   : 0
+Dropped Records: 0
+```
+
+No crashes, brownouts or watchdog resets observed.
+
+---
+
+# Results Summary
+
+| Test | Result |
+|--------|---------|
+| Build Validation | ✅ PASS |
+| Power-On Self Test | ✅ PASS |
+| HEARTBEAT | ✅ PASS |
+| GPS Acquisition | ✅ PASS |
+| GPS_RAW_INT | ✅ PASS |
+| GLOBAL_POSITION_INT_COV | ✅ PASS |
+| GLOBAL_POSITION_INT | ✅ PASS |
+| BATTERY_STATUS | ✅ PASS |
+| SYS_STATUS | ✅ PASS |
+| VFR_HUD | ✅ PASS |
+| HOME_POSITION | ✅ PASS |
+| GPS Speed Deadband | ✅ PASS |
+| QGroundControl Detection | ✅ PASS |
+| Continuous Operation | ✅ PASS |
+
+---
+
+# Instrumentation Validation Summary
+
+| Parameter | Before | After | Result |
+|------------|--------|-------|---------|
+| Pack Voltage | 277.74 V | 15.30 V | ✅ PASS |
+| Relative Altitude | 0.0 m | 0.4 m | ✅ PASS |
+| Ground Speed (stationary) | 0.6 m/s | 0.0 m/s | ✅ PASS |
+| Climb Rate | not transmitted | -0.1 m/s | ✅ PASS |
+| Distance to Home | --.-- m | 3.6 m | ✅ PASS |
+
+---
+
+# Sprint Achievements
+
+### Completed
+
+- MAVLink framework operational
+- HEARTBEAT transmission implemented
+- GPS_RAW_INT implemented
+- GLOBAL_POSITION_INT_COV implemented
+- GLOBAL_POSITION_INT implemented
+- BATTERY_STATUS implemented
+- SYS_STATUS implemented
+- VFR_HUD implemented
+- HOME_POSITION implemented
+- Climb rate estimation implemented
+- QGroundControl integration validated on real hardware
+- Battery pack voltage defect identified, corrected and verified
+- Relative altitude defect traced to MAVLink dialect organization and resolved
+- Residual ground speed defect corrected
+- Home marker and Distance to Home validated
+- Debug instrumentation removed prior to release
+- README and documentation updated
+- Releases v0.11.0, v0.11.1 and v0.11.2 published
+
+### Repository Status
+
+✅ Build stable
+
+✅ Telemetry operational
+
+✅ Flight instrumentation operational
+
+✅ Ground Control Station interoperability validated
+
+---
+
+# Known Limitations
+
+The current implementation provides a functional MAVLink telemetry and instrumentation pipeline, but the vehicle is still reported as **Not Ready / PreFlight** by QGroundControl, as several messages expected from a full autopilot are not yet implemented.
+
+Additionally:
+
+- Heading is transmitted as unknown, since the GPS driver does not currently expose course over ground
+- Airspeed and throttle are not applicable to the current platform and are reported as zero
+
+Pending future development:
+
+- ATTITUDE
+- STATUSTEXT event reporting
+- Flight event detection (launch, apogee, descent, landing)
+- Mission support
+- DataFlash-style flight logging
+- FreeRTOS-based multitasking architecture
+- Long-range telemetry link
+
+---
+
+# Conclusion
+
+Sprint 11 established and validated a complete MAVLink telemetry and flight instrumentation pipeline for the Flight Telemetry & Data Logger project.
+
+The ESP32 flight computer now transmits HEARTBEAT, GPS_RAW_INT, GLOBAL_POSITION_INT, GLOBAL_POSITION_INT_COV, BATTERY_STATUS, SYS_STATUS, VFR_HUD and HOME_POSITION, and has been successfully detected by QGroundControl on real hardware, with live GPS position, battery telemetry, relative altitude, ground speed, climb rate and home reference displayed on the ground station.
+
+Three defects were identified and resolved during this sprint. An invalid pack voltage was traced to incorrect initialization of the extended cell voltage array. A missing relative altitude indication was traced not to an incomplete library, as initially suspected, but to the organization of MAVLink dialects, where GLOBAL_POSITION_INT is defined in the standard dialect included transitively by common. A residual ground speed reading was traced to the GPS deadband being applied only in the logging path.
+
+With this sprint, the project transitions from a standalone telemetry logger to a MAVLink-compatible flight telemetry platform providing ground station instrumentation and capable of interoperating with standard Ground Control Station software.
+
+**Sprint Status:** ✅ COMPLETED
+
+**Ready for Sprint 12 – Flight Event Detection**

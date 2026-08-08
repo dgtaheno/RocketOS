@@ -11,7 +11,7 @@ ESP32-based flight computer featuring GPS telemetry, altitude estimation, batter
 ![Battery](https://img.shields.io/badge/Battery-LiPo_4S-red)
 ![MAVLink](https://img.shields.io/badge/MAVLink-Telemetry-success)
 ![QGroundControl](https://img.shields.io/badge/QGroundControl-Validated-success)
-![Status](https://img.shields.io/badge/Status-Sprint11.4-blue)
+![Status](https://img.shields.io/badge/Status-Sprint11.6-blue)
 ![Language](https://img.shields.io/badge/Language-C%2B%2B-blue)
 ![PlatformIO](https://img.shields.io/badge/PlatformIO-Enabled-success)
 
@@ -182,6 +182,8 @@ All features included in this repository have been validated on real hardware.
 
 ✅ VFR_HUD
 
+✅ HOME_POSITION
+
 ✅ QGroundControl Integration
 
 ---
@@ -199,6 +201,7 @@ Current MAVLink implementation validated on real hardware:
 | GLOBAL_POSITION_INT_COV | 63 | Position with covariance | ✅ |
 | VFR_HUD | 74 | Ground speed, altitude, climb rate | ✅ |
 | BATTERY_STATUS | 147 | Battery voltage, current and SOC | ✅ |
+| HOME_POSITION | 242 | Home reference and distance to home | ✅ |
 
 Runtime validation confirmed:
 
@@ -214,6 +217,8 @@ Relative Altitude Reported
 Ground Speed Reported
 
 Climb Rate Reported
+
+Home Reference Set
 
 System Healthy = YES
 
@@ -252,6 +257,8 @@ Validated functionality:
 
 ✅ Climb Rate Instrumentation
 
+✅ Home Marker and Distance to Home
+
 ✅ Real-Time Telemetry Streaming
 
 ![QGroundControl Validation](docs/images/qgroundcontrol-validation.png)
@@ -267,7 +274,7 @@ Validated functionality:
 | Relative Altitude | GLOBAL_POSITION_INT | relative_alt | 1.3 m |
 | Climb Rate | VFR_HUD | climb | 0.0 m/s |
 | Ground Speed | VFR_HUD | groundspeed | 0.0 m/s |
-| Distance to Home | HOME_POSITION | not implemented | --.-- m |
+| Distance to Home | HOME_POSITION | home reference | 3.6 m |
 
 ---
 
@@ -344,6 +351,10 @@ Relative Altitude
 Ground Speed
 
 Climb Rate
+
+Home Reference
+
+Distance to Home
 
 Battery Voltage
 
@@ -427,9 +438,13 @@ Validated on real hardware:
 
 ✅ MAVLink VFR_HUD Validation
 
+✅ MAVLink HOME_POSITION Validation
+
 ✅ Relative Altitude Validation
 
 ✅ Climb Rate Validation
+
+✅ Distance to Home Validation
 
 ✅ Ground Station Instrument Validation
 
@@ -446,9 +461,9 @@ Validated on real hardware:
 ```text
 Current Development Stage
 
-Sprint 11.4
+Sprint 11.6
 
-Flight Instrumentation
+Flight Instrumentation & Home Reference
 
 Validated on Real Hardware
 ```
@@ -471,6 +486,8 @@ Fault-Tolerant SD Logging
 MAVLink Telemetry
 
 Ground Station Instrumentation
+
+Home Reference & Distance to Home
 
 QGroundControl Connectivity
 ```
@@ -498,11 +515,11 @@ docs/images/
 # Next Milestones
 
 ```text
-HOME_POSITION
-
 Flight Event Detection
 
 Launch & Apogee Algorithms
+
+ATTITUDE Telemetry
 
 FreeRTOS Architecture
 
