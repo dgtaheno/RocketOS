@@ -36,6 +36,7 @@ FlightStateMachine flightState;
 unsigned long lastLog = 0;
 unsigned long lastHealthPrint = 0;
 unsigned long lastHeartbeat = 0;
+bool flightSimDone = false;
 
 // --------------------------------------------------
 // GPS Altitude Reference
@@ -614,75 +615,6 @@ void setup()
         EVENT_SYSTEM_READY);
 
     health.printStatus();
-
-#if FLIGHT_SIMULATION_MODE
-
-    Serial.println();
-    Serial.println("===== FLIGHT SIMULATION =====");
-
-    FlightSimulator sim;
-    FlightStateMachine fsm;
-
-    sim.reset();
-    fsm.reset();
-
-    uint32_t simTimeMs = 0;
-    const uint32_t stepMs = 100;   // 10 Hz
-
-    // Flight phase.
-    while (!sim.isFinished() && simTimeMs < 30000)
-    {
-        float alt = sim.step(stepMs);
-        simTimeMs += stepMs;
-
-        fsm.update(alt, simTimeMs);
-
-        if (fsm.hasStateChanged())
-        {
-            Serial.print("[");
-            Serial.print(simTimeMs / 1000.0f, 1);
-            Serial.print(" s] -> ");
-            Serial.print(fsm.getStateString());
-            Serial.print("  | alt = ");
-            Serial.print(alt, 1);
-            Serial.print(" m | climb = ");
-            Serial.print(fsm.getClimbRate(), 1);
-            Serial.println(" m/s");
-        }
-    }
-
-    // Resting-on-ground phase, so LANDED can confirm.
-    for (int i = 0; i < 20; i++)
-    {
-        simTimeMs += stepMs;
-        fsm.update(0.0f, simTimeMs);
-
-        if (fsm.hasStateChanged())
-        {
-            Serial.print("[");
-            Serial.print(simTimeMs / 1000.0f, 1);
-            Serial.print(" s] -> ");
-            Serial.print(fsm.getStateString());
-            Serial.println("  | on ground");
-        }
-    }
-
-    Serial.println("-----------------------------");
-    Serial.print("Apogee altitude : ");
-    Serial.print(fsm.getApogeeAltitude(), 1);
-    Serial.println(" m");
-
-    Serial.print("Max altitude    : ");
-    Serial.print(fsm.getMaxAltitude(), 1);
-    Serial.println(" m");
-
-    Serial.print("Final state     : ");
-    Serial.println(fsm.getStateString());
-
-    Serial.println("=============================");
-    Serial.println();
-
-#endif
 }
 
 // --------------------------------------------------
@@ -691,6 +623,91 @@ void setup()
 
 void loop()
 {
+#if FLIGHT_SIMULATION_MODE
+
+    // Deferred flight simulation.
+    // Runs once, 15 seconds after boot, so QGroundControl has
+    // time to connect and receive the STATUSTEXT events.
+    static uint32_t lastSimRun = 0;
+    if (millis() - lastSimRun > 30000)
+    {
+        lastSimRun = millis();
+
+        Serial.println();
+        Serial.println("===== FLIGHT SIMULATION =====");
+
+        FlightSimulator sim;
+        FlightStateMachine fsm;
+
+        sim.reset();
+        fsm.reset();
+
+        uint32_t simTimeMs = 0;
+        const uint32_t stepMs = 100;
+
+        // Flight phase.
+        while (!sim.isFinished() && simTimeMs < 30000)
+        {
+            float alt = sim.step(stepMs);
+            simTimeMs += stepMs;
+
+            fsm.update(alt, simTimeMs);
+
+            if (fsm.hasStateChanged())
+            {
+                Serial.print("[");
+                Serial.print(simTimeMs / 1000.0f, 1);
+                Serial.print(" s] -> ");
+                Serial.print(fsm.getStateString());
+                Serial.print("  | alt = ");
+                Serial.print(alt, 1);
+                Serial.println(" m");
+
+                char simMsg[50];
+
+                if (fsm.getState() == FLIGHT_APOGEE)
+                {
+                    snprintf(simMsg, sizeof(simMsg),
+                        "APOGEE DETECTED - %.1f m",
+                        fsm.getApogeeAltitude());
+                }
+                else
+                {
+                    snprintf(simMsg, sizeof(simMsg),
+                        "FLIGHT STATE: %s",
+                        fsm.getStateString());
+                }
+
+                // Keep the MAVLink link alive and send the event.
+                mavlink.sendHeartbeat();
+                mavlink.sendStatusText(6, simMsg);
+
+                delay(400);   // Let QGC display each notification
+            }
+        }
+
+        // Resting-on-ground phase.
+        for (int i = 0; i < 20; i++)
+        {
+            simTimeMs += stepMs;
+            fsm.update(0.0f, simTimeMs);
+
+            if (fsm.hasStateChanged())
+            {
+                mavlink.sendHeartbeat();
+                mavlink.sendStatusText(6, "FLIGHT STATE: LANDED");
+                delay(400);
+            }
+        }
+
+        Serial.print("Apogee: ");
+        Serial.print(fsm.getApogeeAltitude(), 1);
+        Serial.println(" m");
+        Serial.println("=============================");
+    }
+
+#endif
+
 #if GPS_ENABLED
     gps.update();
 #endif
