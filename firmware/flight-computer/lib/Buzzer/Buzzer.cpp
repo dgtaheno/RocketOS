@@ -2,38 +2,45 @@
 
 // =====================================================
 // Flight event patterns
+// Original rhythmic patterns. Active buzzer: single tone,
+// character comes from timing (staccato bursts).
 // =====================================================
 
-// STARTUP — accelerating countdown then confirmation.
-// pi . pi . pi. pi.PIIII  (beeps speeding up + long tone)
+// STARTUP — "power-up chime": quick ascending chatter
+// then a confirming tone. Signals the system is awake.
 static const BuzzerNote PATTERN_STARTUP[] = {
-    {60, 200}, {60, 150}, {60, 100}, {60, 60}, {350, 0}
+    {40, 50}, {40, 40}, {30, 40}, {30, 30}, {60, 40}, {250, 250}
 };
 
-// GPS LOCK — two quick beeps.
+// GPS LOCK — "ready chirp": two quick excited beeps.
+// Confirms GPS fix acquired.
 static const BuzzerNote PATTERN_GPS_LOCK[] = {
-    {50, 60}, {50, 0}
+    {40, 40}, {40, 40}, {90, 250}
 };
 
-// IGNITION — one long powerful tone.
+// IGNITION — "launch tone": one long, strong beep.
+// Marks liftoff detection.
 static const BuzzerNote PATTERN_IGNITION[] = {
-    {600, 0}
+    {600, 300}
 };
 
-// APOGEE — three short accelerating + one long.
+// APOGEE — "peak alert": rapid rising burst then a hold.
+// Marks apogee detection. Highest priority sound.
 static const BuzzerNote PATTERN_APOGEE[] = {
-    {60, 60}, {60, 60}, {60, 60}, {400, 0}
+    {40, 40}, {40, 40}, {40, 40}, {40, 40}, {300, 300}
 };
 
-// LOCATOR — double beep beacon, repeated.
-// pi-pi ...... pi-pi ......
+// LOCATOR — "recovery beacon": strong double beep, repeated.
+// Kept deliberately clear and loud to find the vehicle
+// on the ground. Not decorative.
 static const BuzzerNote PATTERN_LOCATOR[] = {
-    {100, 120}, {100, 1400}
+    {150, 120}, {150, 1500}
 };
 
-// ALARM — triple beep, repeated.
+// ALARM — "warning stutter": urgent triple burst, repeated.
+// Used for critical battery or fault conditions.
 static const BuzzerNote PATTERN_ALARM[] = {
-    {80, 80}, {80, 80}, {80, 400}
+    {40, 40}, {40, 40}, {40, 250}
 };
 
 // =====================================================

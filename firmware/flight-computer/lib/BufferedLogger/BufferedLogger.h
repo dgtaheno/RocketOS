@@ -13,6 +13,7 @@ struct TelemetryRecord
     float pressure;
     float bmpAltitude;
     float extTemperature;
+    uint8_t flightState;
     bool gpsFix;
     double latitude;
     double longitude;

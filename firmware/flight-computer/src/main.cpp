@@ -14,6 +14,7 @@
 #include "FlightStateMachine.h"
 #include "FlightSimulator.h"
 #include "ExternalThermometer.h"
+#include "Buzzer.h"
 
 // --------------------------------------------------
 // System Modules
@@ -30,6 +31,7 @@ BatteryMonitor batteryMonitor;
 MAVLinkTelemetry mavlink;
 FlightStateMachine flightState;
 ExternalThermometer thermo;
+Buzzer buzzer;
 
 // --------------------------------------------------
 // Timing
@@ -49,6 +51,7 @@ bool externalTempValid = false;
 
 bool gpsReferenceCaptured = false;
 float gpsReferenceAltitude = 0.0f;
+float bmpAltitudeAtReference = 0.0f;
 
 // --------------------------------------------------
 // Home Position (MAVLink)
@@ -97,6 +100,7 @@ bool writeTelemetryRecordToSd(
         record.pressure,
         record.bmpAltitude,
         record.extTemperature,
+        record.flightState,
         record.gpsFix,
         record.latitude,
         record.longitude,
@@ -638,6 +642,19 @@ void setup()
         EVENT_SYSTEM_READY);
 
     health.printStatus();
+
+#if BUZZER_ENABLED
+    buzzer.begin(BUZZER_PIN);
+
+    // Play the startup fanfare to completion here, before the
+    // main loop starts, so heavy loop tasks (SD, MAVLink) don't
+    // interrupt the pattern and make it stutter.
+    buzzer.play(BUZZER_STARTUP);
+    while (buzzer.isPlaying())
+    {
+        buzzer.update();
+    }
+#endif
 }
 
 // --------------------------------------------------
@@ -735,6 +752,10 @@ void loop()
     gps.update();
 #endif
 
+#if BUZZER_ENABLED
+    buzzer.update(); // non-blocking, plays the current pattern
+#endif
+
     // --------------------------------------------------
     // External Thermometer (read every 5 s, DS18B20 is slow)
     // --------------------------------------------------
@@ -782,7 +803,7 @@ void loop()
         float mavRelativeAltitude =
             gpsReferenceCaptured
                 ? gpsReferenceAltitude +
-                bmp.getRelativeAltitude()
+                (bmp.getRelativeAltitude() - bmpAltitudeAtReference)
                 : mavGpsAltitude;
 
         // Height above the barometric reference point.
@@ -935,6 +956,30 @@ void loop()
 
             // MAV_SEVERITY_INFO = 6
             mavlink.sendStatusText(6, flightMsg);
+
+#if BUZZER_ENABLED
+            // Only start a new sound if the buzzer is free,
+            // so flight event sounds don't cut each other off.
+            // Apogee is critical and always plays.
+            if (flightState.getState() == FLIGHT_APOGEE)
+            {
+                buzzer.play(BUZZER_APOGEE);   // priority: always
+            }
+            else if (!buzzer.isPlaying())
+            {
+                switch (flightState.getState())
+                {
+                    case FLIGHT_BOOST:
+                        buzzer.play(BUZZER_IGNITION);
+                        break;
+                    case FLIGHT_LANDED:
+                        buzzer.startLocator();
+                        break;
+                    default:
+                        break;
+                }
+            }
+#endif
         }
 
         // --------------------------------------------------
@@ -1026,6 +1071,7 @@ void loop()
         if (gpsFix && !gpsReferenceCaptured)
         {
             gpsReferenceAltitude = gpsAltitude;
+            bmpAltitudeAtReference = bmpAltitude; // ← NEW: baro at fix time
             gpsHomeLatitude = latitude;
             gpsHomeLongitude = longitude;
             gpsReferenceCaptured = true;
@@ -1043,6 +1089,10 @@ void loop()
 
             homePositionSent = true;
             lastHomePosition = millis();
+
+#if BUZZER_ENABLED
+            buzzer.play(BUZZER_GPS_LOCK);
+#endif
         }
 
         // --------------------------------------------------
@@ -1053,9 +1103,12 @@ void loop()
 
         if (gpsReferenceCaptured)
         {
+            // Barometric change SINCE the GPS reference was captured,
+            // added to the GPS reference altitude. This avoids the
+            // barometric drift accumulated before the fix.
             flightAltitude =
                 gpsReferenceAltitude +
-                bmpAltitude;
+                (bmpAltitude - bmpAltitudeAtReference);
         }
         else
         {
@@ -1074,6 +1127,8 @@ void loop()
         record.pressure = pressure;
         record.bmpAltitude = bmpAltitude;
         record.extTemperature = externalTempValid ? externalTemperature : 0.0f;
+
+        record.flightState = (uint8_t)flightState.getState();
 
         record.gpsFix = gpsFix;
 

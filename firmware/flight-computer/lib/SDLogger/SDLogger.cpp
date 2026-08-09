@@ -6,6 +6,21 @@
 #include <SD.h>
 #include <string.h>
 
+// Converts a flight state index to a readable label for the CSV.
+static const char* flightStateToString(uint8_t state)
+{
+    switch (state)
+    {
+        case 0: return "IDLE";
+        case 1: return "BOOST";
+        case 2: return "COAST";
+        case 3: return "APOGEE";
+        case 4: return "DESCENT";
+        case 5: return "LANDED";
+        default: return "UNKNOWN";
+    }
+}
+
 // =====================================================
 // Initialization
 // =====================================================
@@ -166,6 +181,7 @@ bool SDLogger::createLogFile(
         "pressure_hpa,"
         "bmp_altitude_m,"
         "ext_temperature_c,"
+        "flight_state,"
         "gps_fix,"
         "latitude,"
         "longitude,"
@@ -197,6 +213,7 @@ bool SDLogger::writeData(
     float pressure,
     float bmpAltitude,
     float extTemperature,
+    uint8_t flightState,
     bool gpsFix,
     double latitude,
     double longitude,
@@ -234,6 +251,8 @@ bool SDLogger::writeData(
     file.print(bmpAltitude, CSV_DECIMAL_PLACES);
     file.print(",");
     file.print(extTemperature, CSV_DECIMAL_PLACES);
+    file.print(",");
+    file.print(flightStateToString(flightState));
     file.print(",");
     file.print(gpsFix ? 1 : 0);
     file.print(",");
