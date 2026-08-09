@@ -13,6 +13,7 @@
 #include "MAVLinkTelemetry.h"
 #include "FlightStateMachine.h"
 #include "FlightSimulator.h"
+#include "ExternalThermometer.h"
 
 // --------------------------------------------------
 // System Modules
@@ -28,6 +29,7 @@ INA219Sensor ina219Sensor;
 BatteryMonitor batteryMonitor;
 MAVLinkTelemetry mavlink;
 FlightStateMachine flightState;
+ExternalThermometer thermo;
 
 // --------------------------------------------------
 // Timing
@@ -37,6 +39,9 @@ unsigned long lastLog = 0;
 unsigned long lastHealthPrint = 0;
 unsigned long lastHeartbeat = 0;
 bool flightSimDone = false;
+unsigned long lastThermoRead = 0;
+float externalTemperature = 0.0f;
+bool externalTempValid = false;
 
 // --------------------------------------------------
 // GPS Altitude Reference
@@ -430,6 +435,23 @@ void setup()
     }
 
     // --------------------------------------------------
+    // External Thermometer (DS18B20)
+    // --------------------------------------------------
+
+#if EXT_THERMOMETER_ENABLED
+
+    if (thermo.begin(EXT_THERMOMETER_PIN))
+    {
+        Serial.println("[PASS] DS18B20 external thermometer");
+    }
+    else
+    {
+        Serial.println("[WARN] DS18B20 external thermometer not detected");
+    }
+
+#endif
+
+    // --------------------------------------------------
     // SD Card
     // --------------------------------------------------
 
@@ -710,6 +732,25 @@ void loop()
 
 #if GPS_ENABLED
     gps.update();
+#endif
+
+    // --------------------------------------------------
+    // External Thermometer (read every 5 s, DS18B20 is slow)
+    // --------------------------------------------------
+
+#if EXT_THERMOMETER_ENABLED
+
+    if (millis() - lastThermoRead >= 5000)
+    {
+        lastThermoRead = millis();
+        externalTempValid = thermo.update();
+
+        if (externalTempValid)
+        {
+            externalTemperature = thermo.getTemperature();
+        }
+    }
+
 #endif
 
     // --------------------------------------------------
@@ -1137,6 +1178,17 @@ void loop()
         Serial.print("BMP Alt     : ");
         Serial.print(bmpAltitude, 2);
         Serial.println(" m");
+
+        Serial.print("Ext Temp    : ");
+        if (externalTempValid)
+        {
+            Serial.print(externalTemperature, 2);
+            Serial.println(" C");
+        }
+        else
+        {
+            Serial.println("N/A");
+        }
 
         Serial.print("Flight State: ");
         Serial.println(flightState.getStateString());

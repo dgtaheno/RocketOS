@@ -1452,146 +1452,6 @@
 			)
 			(embedded_fonts no)
 		)
-		(symbol "Device:R"
-			(pin_numbers
-				(hide yes)
-			)
-			(pin_names
-				(offset 0)
-			)
-			(exclude_from_sim no)
-			(in_bom yes)
-			(on_board yes)
-			(in_pos_files yes)
-			(duplicate_pin_numbers_are_jumpers no)
-			(property "Reference" "R"
-				(at 2.032 0 90)
-				(show_name no)
-				(do_not_autoplace no)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Value" "R"
-				(at 0 0 90)
-				(show_name no)
-				(do_not_autoplace no)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Footprint" ""
-				(at -1.778 0 90)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Datasheet" ""
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "Description" "Resistor"
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "ki_keywords" "R res resistor"
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(property "ki_fp_filters" "R_*"
-				(at 0 0 0)
-				(show_name no)
-				(do_not_autoplace no)
-				(hide yes)
-				(effects
-					(font
-						(size 1.27 1.27)
-					)
-				)
-			)
-			(symbol "R_0_1"
-				(rectangle
-					(start -1.016 -2.54)
-					(end 1.016 2.54)
-					(stroke
-						(width 0.254)
-						(type default)
-					)
-					(fill
-						(type none)
-					)
-				)
-			)
-			(symbol "R_1_1"
-				(pin passive line
-					(at 0 3.81 270)
-					(length 1.27)
-					(name ""
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "1"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-				(pin passive line
-					(at 0 -3.81 90)
-					(length 1.27)
-					(name ""
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-					(number "2"
-						(effects
-							(font
-								(size 1.27 1.27)
-							)
-						)
-					)
-				)
-			)
-			(embedded_fonts no)
-		)
 		(symbol "RF_Module:ESP32-WROOM-32"
 			(exclude_from_sim no)
 			(in_bom yes)
@@ -2793,18 +2653,6 @@
 		)
 	)
 	(junction
-		(at 175.26 157.48)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "1a260828-ecaf-4fc2-bf58-ca1f8d06aa0b")
-	)
-	(junction
-		(at 175.26 149.86)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "c428f56b-97df-4154-b173-b5891384a433")
-	)
-	(junction
 		(at 34.29 54.61)
 		(diameter 0)
 		(color 0 0 0 0)
@@ -2842,7 +2690,7 @@
 	)
 	(wire
 		(pts
-			(xy 182.88 151.13) (xy 220.98 151.13)
+			(xy 214.63 151.13) (xy 220.98 151.13)
 		)
 		(stroke
 			(width 0)
@@ -2859,16 +2707,6 @@
 			(type default)
 		)
 		(uuid "0b182d7c-e9f6-4ca7-82a2-47ecf2cd7cf7")
-	)
-	(wire
-		(pts
-			(xy 182.88 153.67) (xy 220.98 153.67)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "1339284a-8c77-474e-8ca0-e6fb12753f80")
 	)
 	(wire
 		(pts
@@ -2949,16 +2787,6 @@
 			(type default)
 		)
 		(uuid "3f358ce0-97ec-4e02-8d5a-2f1d351764f1")
-	)
-	(wire
-		(pts
-			(xy 175.26 149.86) (xy 182.88 149.86)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "3f5a5dbe-71f8-475c-a9c0-778aceaeee73")
 	)
 	(wire
 		(pts
@@ -3152,16 +2980,6 @@
 	)
 	(wire
 		(pts
-			(xy 170.18 149.86) (xy 175.26 149.86)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "8d7aaff9-d7d1-4f5d-a923-7296e080e064")
-	)
-	(wire
-		(pts
 			(xy 121.92 44.45) (xy 121.92 50.8)
 		)
 		(stroke
@@ -3242,16 +3060,6 @@
 	)
 	(wire
 		(pts
-			(xy 182.88 149.86) (xy 182.88 151.13)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "bb6e65b9-dba1-4fb4-acbb-c05f5ff5ab60")
-	)
-	(wire
-		(pts
 			(xy 210.82 78.74) (xy 220.98 78.74)
 		)
 		(stroke
@@ -3259,16 +3067,6 @@
 			(type default)
 		)
 		(uuid "bc277ecd-c019-47e6-aa88-2428fb23faac")
-	)
-	(wire
-		(pts
-			(xy 175.26 157.48) (xy 182.88 157.48)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "bc676c0d-2672-4c30-a3e8-71453d7162af")
 	)
 	(wire
 		(pts
@@ -3309,6 +3107,16 @@
 			(type default)
 		)
 		(uuid "cf82405d-c995-442c-ad92-b56a0f1e6f5b")
+	)
+	(wire
+		(pts
+			(xy 214.63 153.67) (xy 220.98 153.67)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "d05393a7-3ece-4211-a3ec-695368fed9c0")
 	)
 	(wire
 		(pts
@@ -3362,16 +3170,6 @@
 	)
 	(wire
 		(pts
-			(xy 170.18 157.48) (xy 175.26 157.48)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "d788a6bd-6e3c-42d3-879d-cd8e4fc7fada")
-	)
-	(wire
-		(pts
 			(xy 214.63 146.05) (xy 220.98 146.05)
 		)
 		(stroke
@@ -3389,16 +3187,6 @@
 			(type default)
 		)
 		(uuid "f209fefd-ae97-4afb-a9ee-874363c85744")
-	)
-	(wire
-		(pts
-			(xy 182.88 153.67) (xy 182.88 157.48)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "f550d869-9d7f-40ca-abaf-4620eb6a5cf7")
 	)
 	(label "MISO"
 		(at 220.98 97.79 180)
@@ -3833,6 +3621,30 @@
 					(size 1.27 1.27)
 				)
 				(justify left)
+			)
+		)
+	)
+	(global_label "GPIO4-ESP32 DevKitC V4"
+		(shape input)
+		(at 214.63 156.21 180)
+		(fields_autoplaced yes)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify right)
+		)
+		(uuid "229228e5-d38b-42b3-862c-b54c53940784")
+		(property "Intersheetrefs" "${INTERSHEET_REFS}"
+			(at 186.9101 156.21 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
 			)
 		)
 	)
@@ -4340,30 +4152,6 @@
 			)
 		)
 	)
-	(global_label "GPIO4-ESP32 DevKitC V4"
-		(shape input)
-		(at 214.63 156.21 180)
-		(fields_autoplaced yes)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify right)
-		)
-		(uuid "c5495c95-fd4f-4b94-aa72-1d8f068df9b8")
-		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 186.9101 156.21 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify right)
-			)
-		)
-	)
 	(global_label "GPIO19-ESP32 DevKitC V4"
 		(shape input)
 		(at 214.63 97.79 180)
@@ -4659,88 +4447,6 @@
 			(project "FlightTelemetry"
 				(path "/e31ac7f1-555d-4190-a97f-833d688a3009"
 					(reference "#PWR09")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
-		(lib_id "Device:R")
-		(at 175.26 153.67 0)
-		(unit 1)
-		(body_style 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(in_pos_files yes)
-		(dnp no)
-		(fields_autoplaced yes)
-		(uuid "1348046d-c83c-495e-8f46-01d3100fc569")
-		(property "Reference" "R1"
-			(at 177.8 152.3999 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Value" "10K"
-			(at 177.8 154.9399 0)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
-		(property "Footprint" ""
-			(at 173.482 153.67 90)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Datasheet" ""
-			(at 175.26 153.67 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Description" "Resistor"
-			(at 175.26 153.67 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(pin "1"
-			(uuid "0288781a-0127-42e8-94d1-1a0643fb4bd5")
-		)
-		(pin "2"
-			(uuid "753d5363-5ef1-4809-892b-e008e075f7ef")
-		)
-		(instances
-			(project "FlightTelemetry"
-				(path "/e31ac7f1-555d-4190-a97f-833d688a3009"
-					(reference "R1")
 					(unit 1)
 				)
 			)
@@ -5401,85 +5107,6 @@
 		)
 	)
 	(symbol
-		(lib_id "power:GND")
-		(at 170.18 149.86 270)
-		(unit 1)
-		(body_style 1)
-		(exclude_from_sim no)
-		(in_bom yes)
-		(on_board yes)
-		(in_pos_files yes)
-		(dnp no)
-		(fields_autoplaced yes)
-		(uuid "6262b431-2d29-4103-a3b6-68ce3b5e173f")
-		(property "Reference" "#PWR019"
-			(at 163.83 149.86 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Value" "GND"
-			(at 166.37 149.8599 90)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify right)
-			)
-		)
-		(property "Footprint" ""
-			(at 170.18 149.86 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Datasheet" ""
-			(at 170.18 149.86 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
-			(at 170.18 149.86 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-			)
-		)
-		(pin "1"
-			(uuid "bc71e572-082f-46c8-8354-4c38b18b5d25")
-		)
-		(instances
-			(project "FlightTelemetry"
-				(path "/e31ac7f1-555d-4190-a97f-833d688a3009"
-					(reference "#PWR019")
-					(unit 1)
-				)
-			)
-		)
-	)
-	(symbol
 		(lib_id "Connector_Generic:Conn_01x03")
 		(at 226.06 143.51 0)
 		(unit 1)
@@ -5647,6 +5274,85 @@
 			(project "FlightTelemetry"
 				(path "/e31ac7f1-555d-4190-a97f-833d688a3009"
 					(reference "J5")
+					(unit 1)
+				)
+			)
+		)
+	)
+	(symbol
+		(lib_id "power:GND")
+		(at 214.63 151.13 270)
+		(unit 1)
+		(body_style 1)
+		(exclude_from_sim no)
+		(in_bom yes)
+		(on_board yes)
+		(in_pos_files yes)
+		(dnp no)
+		(fields_autoplaced yes)
+		(uuid "731cf5f1-3be7-4607-943d-676da6cc8f97")
+		(property "Reference" "#PWR019"
+			(at 208.28 151.13 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Value" "GND"
+			(at 210.82 151.1299 90)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+				(justify right)
+			)
+		)
+		(property "Footprint" ""
+			(at 214.63 151.13 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Datasheet" ""
+			(at 214.63 151.13 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(property "Description" "Power symbol creates a global label with name \"GND\" , ground"
+			(at 214.63 151.13 0)
+			(hide yes)
+			(show_name no)
+			(do_not_autoplace no)
+			(effects
+				(font
+					(size 1.27 1.27)
+				)
+			)
+		)
+		(pin "1"
+			(uuid "220fc8e7-6b03-470c-90c6-7f9a31aaa2a3")
+		)
+		(instances
+			(project "FlightTelemetry"
+				(path "/e31ac7f1-555d-4190-a97f-833d688a3009"
+					(reference "#PWR019")
 					(unit 1)
 				)
 			)
@@ -6402,7 +6108,7 @@
 				)
 			)
 		)
-		(property "Value" "+5V_BUS"
+		(property "Value" "+3.3V_BUS"
 			(at 210.82 146.0499 90)
 			(show_name no)
 			(do_not_autoplace no)
@@ -6539,7 +6245,7 @@
 	)
 	(symbol
 		(lib_id "power:+3.3V")
-		(at 170.18 157.48 90)
+		(at 214.63 153.67 90)
 		(unit 1)
 		(body_style 1)
 		(exclude_from_sim no)
@@ -6550,7 +6256,7 @@
 		(fields_autoplaced yes)
 		(uuid "b6cf436c-d59b-4c49-af22-a4b473ff6aa7")
 		(property "Reference" "#PWR020"
-			(at 173.99 157.48 0)
+			(at 218.44 153.67 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -6561,7 +6267,7 @@
 			)
 		)
 		(property "Value" "+3.3V_BUS"
-			(at 166.37 157.4799 90)
+			(at 210.82 153.6699 90)
 			(show_name no)
 			(do_not_autoplace no)
 			(effects
@@ -6572,7 +6278,7 @@
 			)
 		)
 		(property "Footprint" ""
-			(at 170.18 157.48 0)
+			(at 214.63 153.67 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -6583,7 +6289,7 @@
 			)
 		)
 		(property "Datasheet" ""
-			(at 170.18 157.48 0)
+			(at 214.63 153.67 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)
@@ -6594,7 +6300,7 @@
 			)
 		)
 		(property "Description" "Power symbol creates a global label with name \"+3.3V\""
-			(at 170.18 157.48 0)
+			(at 214.63 153.67 0)
 			(hide yes)
 			(show_name no)
 			(do_not_autoplace no)

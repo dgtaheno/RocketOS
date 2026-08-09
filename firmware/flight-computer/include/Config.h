@@ -115,3 +115,15 @@
 // FlightStateMachine at boot instead of normal operation.
 // Set to 0 for normal flight.
 #define FLIGHT_SIMULATION_MODE 0
+
+// =====================================================
+// Buzzer Configuration
+// =====================================================
+#define BUZZER_ENABLED true
+#define BUZZER_PIN 25
+
+// =====================================================
+// DS18B20 External Thermometer Configuration
+// =====================================================
+#define EXT_THERMOMETER_ENABLED   true
+#define EXT_THERMOMETER_PIN       4
