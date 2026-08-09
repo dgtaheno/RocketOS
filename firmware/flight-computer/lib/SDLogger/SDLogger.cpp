@@ -37,7 +37,6 @@ bool SDLogger::selfTest()
     }
 
     file.close();
-
     SD.remove(testFile);
 
     return true;
@@ -50,7 +49,6 @@ bool SDLogger::selfTest()
 bool SDLogger::createLogFile()
 {
     char fileName[64];
-
     int index = 1;
 
     while (true)
@@ -82,6 +80,7 @@ bool SDLogger::createLogFile()
         "temperature_c,"
         "pressure_hpa,"
         "bmp_altitude_m,"
+        "ext_temperature_c,"
         "gps_fix,"
         "latitude,"
         "longitude,"
@@ -109,7 +108,6 @@ bool SDLogger::createLogFile(
     }
 
     char safeTime[16];
-
     localTime.toCharArray(
         safeTime,
         sizeof(safeTime));
@@ -123,7 +121,6 @@ bool SDLogger::createLogFile(
     }
 
     char baseName[64];
-
     sprintf(
         baseName,
         "/flight_%s_%s.csv",
@@ -168,6 +165,7 @@ bool SDLogger::createLogFile(
         "temperature_c,"
         "pressure_hpa,"
         "bmp_altitude_m,"
+        "ext_temperature_c,"
         "gps_fix,"
         "latitude,"
         "longitude,"
@@ -198,6 +196,7 @@ bool SDLogger::writeData(
     float temperature,
     float pressure,
     float bmpAltitude,
+    float extTemperature,
     bool gpsFix,
     double latitude,
     double longitude,
@@ -228,43 +227,32 @@ bool SDLogger::writeData(
 
     file.print(timestamp);
     file.print(",");
-
     file.print(temperature, CSV_DECIMAL_PLACES);
     file.print(",");
-
     file.print(pressure, CSV_DECIMAL_PLACES);
     file.print(",");
-
     file.print(bmpAltitude, CSV_DECIMAL_PLACES);
     file.print(",");
-
+    file.print(extTemperature, CSV_DECIMAL_PLACES);
+    file.print(",");
     file.print(gpsFix ? 1 : 0);
     file.print(",");
-
     file.print(latitude, 6);
     file.print(",");
-
     file.print(longitude, 6);
     file.print(",");
-
     file.print(gpsAltitude, 1);
     file.print(",");
-
     file.print(flightAltitude, CSV_DECIMAL_PLACES);
     file.print(",");
-
     file.print(speed, 2);
     file.print(",");
-
     file.print(batteryVoltage, 2);
     file.print(",");
-
     file.print(current_mA, 2);
     file.print(",");
-
     file.print(power_mW, 2);
     file.print(",");
-
     file.println(batterySoc, 1);
 
     bool writeOk = !file.getWriteError();

@@ -9,21 +9,16 @@
 struct TelemetryRecord
 {
     uint32_t timestamp;
-
     float temperature;
     float pressure;
     float bmpAltitude;
-
+    float extTemperature;
     bool gpsFix;
-
     double latitude;
     double longitude;
-
     float gpsAltitude;
     float flightAltitude;
-
     float speed;
-
     float batteryVoltage;
     float current_mA;
     float power_mW;
@@ -47,17 +42,13 @@ public:
     void clear();
 
     bool isEmpty() const;
-
     bool isFull() const;
 
     size_t size() const;
-
     size_t capacity() const;
-
     size_t freeSpace() const;
 
     uint32_t getDroppedRecords() const;
-
     uint32_t getTotalBuffered() const;
 
 private:

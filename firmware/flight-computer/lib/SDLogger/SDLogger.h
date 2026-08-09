@@ -13,7 +13,6 @@ public:
     // =====================================================
 
     bool begin();
-
     bool selfTest();
 
     // =====================================================
@@ -41,6 +40,7 @@ public:
         float temperature,
         float pressure,
         float bmpAltitude,
+        float extTemperature,
         bool gpsFix,
         double latitude,
         double longitude,
@@ -57,18 +57,12 @@ public:
     // =====================================================
 
     uint64_t getTotalBytes();
-
     uint64_t getUsedBytes();
-
     uint64_t getFreeBytes();
-
     uint8_t getUsagePercent();
 
     bool isStorageAvailable();
-
     bool isStorageWarning();
-
     bool isStorageCritical();
-
     bool isStorageFull();
 };

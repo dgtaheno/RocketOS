@@ -96,6 +96,7 @@ bool writeTelemetryRecordToSd(
         record.temperature,
         record.pressure,
         record.bmpAltitude,
+        record.extTemperature,
         record.gpsFix,
         record.latitude,
         record.longitude,
@@ -1072,6 +1073,7 @@ void loop()
         record.temperature = temperature;
         record.pressure = pressure;
         record.bmpAltitude = bmpAltitude;
+        record.extTemperature = externalTempValid ? externalTemperature : 0.0f;
 
         record.gpsFix = gpsFix;
 
