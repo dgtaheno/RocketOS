@@ -52,6 +52,11 @@ Hardware platform used during validation testing.
     <td align="center"><img src="docs/images/MP1584.png" width="150"><br><b>MP1584</b></td>
     <td align="center"><img src="docs/images/Tattu4S.png" width="150"><br><b>Tattu LiPo 4S</b></td>
   </tr>
+  <tr>
+    <td align="center"><img src="docs/images/ext-thermometer.png" width="150"><br><b>DS18B20</b></td>
+    <td align="center"><img src="docs/images/buzzer.png" width="150"><br><b>Active Buzzer</b></td>
+    <td></td>
+  </tr>
 </table>
 
 ---
@@ -535,3 +540,96 @@ Validated on real hardware:
 
 ✅ MAVLink End-to-End Telemetry Validation
 
+✅ No System Regression
+
+---
+
+# Current Status
+
+```text
+Current Development Stage
+
+Sprint 13a
+
+Environmental Sensing & Audible Feedback
+
+Validated on Real Hardware
+```
+
+Current capabilities:
+
+```text
+GPS Telemetry
+
+Barometric Altitude Estimation
+
+Dual Temperature Sensing
+
+Climb Rate Estimation
+
+Autonomous Flight Event Detection
+
+Audible Event Feedback
+
+Battery Monitoring
+
+System Health Monitoring
+
+Fault-Tolerant SD Logging
+
+MAVLink Telemetry
+
+Ground Station Instrumentation
+
+Home Reference & Distance to Home
+
+QGroundControl Connectivity
+
+Unit-Tested Flight Logic
+```
+
+---
+
+# Documentation
+
+```text
+docs/TestReport_Sprint8.md
+
+docs/TestReport_Sprint9.md
+
+docs/TestReport_Sprint10.md
+
+docs/TestReport_Sprint11.md
+
+docs/TestReport_Sprint12.md
+
+docs/TestReport_Sprint13a.md
+
+docs/schematics/
+
+docs/images/
+```
+
+---
+
+# Next Milestones
+
+```text
+Recovery Deployment Output (servo)
+
+Flight Profile Replay Testing
+
+Inertial Measurement Unit (GY-87)
+
+Long-Range Telemetry (LoRa)
+
+Raspberry Pi Ground Station
+
+Field Test Campaign
+```
+
+---
+
+# License
+
+MIT License
