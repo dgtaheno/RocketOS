@@ -1,6 +1,6 @@
 # Flight Telemetry & Data Logger
 
-ESP32-based flight computer featuring GPS telemetry, barometric altitude estimation, dual temperature sensing, battery monitoring, MAVLink telemetry, autonomous flight event detection, audible event feedback, fault-tolerant SD logging and data-driven flight profile replay testing.
+ESP32-based flight computer featuring GPS telemetry, barometric altitude estimation, dual temperature sensing, battery monitoring, MAVLink telemetry, autonomous flight event detection, audible event feedback, fault-tolerant SD logging, data-driven flight profile replay testing and serial hardware flight profile replay.
 
 ![Project Banner](docs/images/banner.png)
 
@@ -12,7 +12,7 @@ ESP32-based flight computer featuring GPS telemetry, barometric altitude estimat
 ![MAVLink](https://img.shields.io/badge/MAVLink-Telemetry-success)
 ![QGroundControl](https://img.shields.io/badge/QGroundControl-Validated-success)
 ![Tests](https://img.shields.io/badge/Tests-9_passing-brightgreen)
-![Status](https://img.shields.io/badge/Status-Sprint14-blue)
+![Status](https://img.shields.io/badge/Status-Sprint14b-blue)
 ![Language](https://img.shields.io/badge/Language-C%2B%2B-blue)
 ![PlatformIO](https://img.shields.io/badge/PlatformIO-Enabled-success)
 
@@ -62,7 +62,7 @@ Hardware platform used during validation testing.
 
 # Overview
 
-Flight Telemetry & Data Logger is a modular ESP32-based flight computer for model rocketry. It is designed for telemetry acquisition, altitude estimation, environmental sensing, power monitoring, autonomous flight event detection, ground station interoperability, reliable flight data recording and repeatable software validation using replayed flight profiles.
+Flight Telemetry & Data Logger is a modular ESP32-based flight computer for model rocketry. It is designed for telemetry acquisition, altitude estimation, environmental sensing, power monitoring, autonomous flight event detection, ground station interoperability, reliable flight data recording and repeatable validation using replayed flight profiles.
 
 The project combines:
 
@@ -80,9 +80,10 @@ The project combines:
 - Buffered telemetry recovery
 - Unit tests for core flight logic
 - CSV-based flight profile replay tests
+- Serial hardware flight profile replay on ESP32
 - OpenRocket and generic CSV import tooling
 
-All implemented hardware features have been validated on real hardware. Flight profile replay tests run on the host computer through the PlatformIO native environment.
+All implemented hardware features have been validated on real hardware. Flight profile replay tests run both on the host computer through the PlatformIO native environment and on the ESP32 through USB serial replay.
 
 ---
 
@@ -123,7 +124,7 @@ Detection uses BMP388 barometric altitude with low-pass filtered climb rate and 
 
 # Flight Profile Replay Testing
 
-Sprint 14 adds data-driven replay testing for the flight state machine.
+Sprint 14 added data-driven replay testing for the flight state machine.
 
 Instead of only testing isolated altitude points, full altitude-vs-time CSV profiles are replayed through the same `FlightStateMachine` logic used by the firmware. The detected apogee is compared against the expected apogee declared in a small `.meta` file.
 
@@ -139,9 +140,9 @@ CSV flight profile -> FlightStateMachine replay -> detected apogee -> expected a
 | `midpower_machdip` | Mid-power transonic mach-dip case | 904.4 m | False barometric dip rejection |
 | `low_apogee` | Low apogee short flight | 71.5 m | Small-flight validation |
 
-The `midpower_machdip` profile is especially important because it includes a synthetic transonic barometric disturbance. The state machine correctly ignores the false dip and detects the real apogee.
+The `midpower_machdip` profile includes a synthetic transonic barometric disturbance. The state machine correctly ignores the false dip and detects the real apogee.
 
-## Test results
+## Native test results
 
 ```text
 RealFlightProfiles/FlightProfileTest.DetectsApogeeWithinTolerance/estes_c6          [PASSED]
@@ -164,6 +165,107 @@ Run the test suite with:
 cd firmware/flight-computer
 pio test -e native
 ```
+
+---
+
+# Serial Hardware Flight Profile Replay
+
+Sprint 14b adds a serial hardware replay mode for validating flight profiles on the real ESP32 hardware.
+
+This mode streams a CSV flight profile from the PC to the ESP32 over USB serial. The ESP32 feeds the received altitude samples into the real `FlightStateMachine`, triggering the same flight events used by the firmware.
+
+```text
+CSV profile on PC -> USB Serial -> ESP32 -> FlightStateMachine -> buzzer + event output
+```
+
+## Purpose
+
+Serial replay bridges the gap between host-based unit tests and real hardware validation.
+
+It validates:
+
+- Flight state detection on the actual ESP32
+- Real firmware integration
+- Buzzer event feedback
+- Serial command handling
+- Timing and state transition behaviour with full flight profiles
+- Correct handling of long descent profiles
+
+## Protocol
+
+The PC sends:
+
+```text
+PROFILE_START
+R,<time_ms>,<altitude_m>
+R,<time_ms>,<altitude_m>
+...
+PROFILE_END
+```
+
+The ESP32 responds with:
+
+```text
+[REPLAY] READY
+[REPLAY] START
+[FLIGHT] State -> BOOST
+[FLIGHT] State -> COAST
+[FLIGHT] State -> APOGEE
+[FLIGHT] State -> DESCENT
+[FLIGHT] State -> LANDED
+[REPLAY] END | samples=<count>
+```
+
+## Usage
+
+Enable replay mode in `Config.h`:
+
+```cpp
+#define SERIAL_PROFILE_REPLAY_MODE 1
+#define SERIAL_REPLAY_ALLOW_ACTUATORS 0
+#define SERIAL_REPLAY_VERBOSE 0
+```
+
+Upload the firmware:
+
+```bash
+pio run -e esp32dev -t upload
+```
+
+Run a replay profile:
+
+```bash
+python tools/send_profile_serial.py test_profiles/low_apogee.csv --port COM5 --speed 1
+```
+
+Run the mach-dip profile:
+
+```bash
+python tools/send_profile_serial.py test_profiles/midpower_machdip.csv --port COM5 --speed 5
+```
+
+Before committing or using the firmware normally, disable replay mode again:
+
+```cpp
+#define SERIAL_PROFILE_REPLAY_MODE 0
+#define SERIAL_REPLAY_ALLOW_ACTUATORS 0
+#define SERIAL_REPLAY_VERBOSE 0
+```
+
+## Validated hardware replay profiles
+
+| Profile | Expected Samples | Result |
+|---------|------------------|--------|
+| `low_apogee` | 491 | PASS |
+| `midpower_machdip` | 3265 | PASS |
+
+Both profiles replayed successfully on the ESP32 hardware and triggered the full flight sequence:
+
+```text
+BOOST -> COAST -> APOGEE -> DESCENT -> LANDED
+```
+
+The corrected `midpower_machdip` profile now descends continuously to ground level without the previous artificial altitude drop.
 
 ---
 
@@ -200,7 +302,7 @@ expected_apogee_m: 904.4
 tolerance_m: 8.0
 ```
 
-The manifest file controls which profiles are included in the test run:
+The manifest file controls which profiles are included in the native test run:
 
 ```text
 estes_c6
@@ -343,7 +445,9 @@ This avoids barometric drift accumulated before the fix and keeps flight altitud
 
 - GoogleTest host-based unit tests
 - Data-driven flight profile replay tests
+- Serial hardware flight profile replay on ESP32
 - Synthetic mach-dip validation profile
+- Corrected mach-dip descent profile
 - OpenRocket/generic CSV import support
 - 9 native tests passing
 
@@ -383,6 +487,7 @@ ESP32 DevKitC V4
 |-- MAVLinkTelemetry
 |-- FlightStateMachine
 |-- FlightSimulator
+|-- SerialProfileReplay
 |-- Flight Profile Replay Tests
 |-- Flight Logger
 ```
@@ -474,6 +579,7 @@ docs/
   TestReport_Sprint12.md
   TestReport_Sprint13a.md
   TestReport_Sprint14.md
+  TestReport_Sprint14b.md
   images/
   schematics/
 
@@ -519,7 +625,9 @@ Validated on real hardware where applicable:
 - Distance to home validation
 - Flight state machine unit tests
 - Flight profile replay tests
+- Serial hardware flight profile replay
 - Synthetic mach-dip profile validation
+- Corrected mach-dip descent validation
 - QGroundControl connection validation
 - No system regression
 
@@ -528,9 +636,9 @@ Validated on real hardware where applicable:
 # Current Status
 
 ```text
-Current Development Stage: Sprint 14
-Focus: Flight Profile Replay Testing
-Status: Validated with 9/9 native tests passing
+Current Development Stage: Sprint 14b
+Focus: Serial Hardware Flight Profile Replay
+Status: Native tests 9/9 passing + hardware replay validated
 ```
 
 Current capabilities:
@@ -551,6 +659,7 @@ Home Reference & Distance to Home
 QGroundControl Connectivity
 Unit-Tested Flight Logic
 CSV Flight Profile Replay Testing
+Serial Hardware Flight Profile Replay
 OpenRocket / Generic CSV Import Tooling
 ```
 
