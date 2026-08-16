@@ -127,3 +127,20 @@
 // =====================================================
 #define EXT_THERMOMETER_ENABLED   true
 #define EXT_THERMOMETER_PIN       4
+
+// =====================================================
+// Serial Flight Profile Replay
+// =====================================================
+//
+// Development / hardware-in-the-loop mode.
+// When enabled, altitude samples are received over USB serial
+// and replayed through the FlightStateMachine.
+//
+// IMPORTANT:
+// This mode is intended for bench testing only.
+#define SERIAL_PROFILE_REPLAY_MODE 0
+
+// Safety flag for future actuators.
+// Keep disabled by default.
+#define SERIAL_REPLAY_ALLOW_ACTUATORS 0
+#define SERIAL_REPLAY_VERBOSE 0
