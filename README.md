@@ -1,6 +1,6 @@
-# 🚀 Flight Telemetry & Data Logger
+# Flight Telemetry & Data Logger
 
-ESP32-based flight computer featuring GPS telemetry, altitude estimation, dual temperature sensing, power monitoring, MAVLink telemetry, autonomous flight event detection, audible event feedback and fault-tolerant flight data logging.
+ESP32-based flight computer featuring GPS telemetry, barometric altitude estimation, dual temperature sensing, battery monitoring, MAVLink telemetry, autonomous flight event detection, audible event feedback, fault-tolerant SD logging and data-driven flight profile replay testing.
 
 ![Project Banner](docs/images/banner.png)
 
@@ -9,11 +9,10 @@ ESP32-based flight computer featuring GPS telemetry, altitude estimation, dual t
 ![Sensor](https://img.shields.io/badge/Sensor-BMP388-orange)
 ![Temp](https://img.shields.io/badge/Temp-DS18B20-orange)
 ![Power](https://img.shields.io/badge/Power-INA219-yellow)
-![Battery](https://img.shields.io/badge/Battery-LiPo_4S-red)
 ![MAVLink](https://img.shields.io/badge/MAVLink-Telemetry-success)
 ![QGroundControl](https://img.shields.io/badge/QGroundControl-Validated-success)
-![Tests](https://img.shields.io/badge/Tests-6_passing-brightgreen)
-![Status](https://img.shields.io/badge/Status-Sprint13a-blue)
+![Tests](https://img.shields.io/badge/Tests-9_passing-brightgreen)
+![Status](https://img.shields.io/badge/Status-Sprint14-blue)
 ![Language](https://img.shields.io/badge/Language-C%2B%2B-blue)
 ![PlatformIO](https://img.shields.io/badge/PlatformIO-Enabled-success)
 
@@ -34,12 +33,12 @@ Hardware platform used during validation testing.
 | Microcontroller | ESP32 DevKitC V4 | Flight computer |
 | GNSS Receiver | u-blox NEO-M9N | Position, altitude, UTC time |
 | Barometric Sensor | BMP388 | Pressure, temperature, relative altitude |
-| External Thermometer | DS18B20 | Ambient (outside) temperature |
+| External Thermometer | DS18B20 | Ambient outside temperature |
 | Power Monitor | INA219 | Voltage, current, power |
 | Storage | MicroSD Module | Flight data logging |
-| Audible Feedback | Active Buzzer | Event and recovery beacon |
+| Audible Feedback | Active Buzzer | Event feedback and recovery beacon |
 | Power Supply | MP1584 Buck Converter | Regulated 5V rail |
-| Battery | Tattu LiPo 4S | System power source |
+| Battery | Tattu LiPo 4S | Bench power source |
 
 <table>
   <tr>
@@ -63,43 +62,41 @@ Hardware platform used during validation testing.
 
 # Overview
 
-Flight Telemetry & Data Logger is a modular ESP32-based flight computer for model rocketry, designed for telemetry acquisition, altitude estimation, environmental sensing, power monitoring, autonomous flight event detection, ground station interoperability and reliable flight data recording.
+Flight Telemetry & Data Logger is a modular ESP32-based flight computer for model rocketry. It is designed for telemetry acquisition, altitude estimation, environmental sensing, power monitoring, autonomous flight event detection, ground station interoperability, reliable flight data recording and repeatable software validation using replayed flight profiles.
 
 The project combines:
 
 - GPS telemetry
 - Barometric altitude estimation
-- Dual temperature sensing (internal BMP388 + external DS18B20)
-- Battery monitoring
+- Dual temperature sensing with BMP388 and DS18B20
+- Battery and power monitoring
 - MAVLink telemetry
-- Ground station instrumentation
+- QGroundControl interoperability
 - Autonomous flight event detection
 - Audible event feedback and recovery beacon
 - Runtime health monitoring
 - Event-driven diagnostics
 - Fault-tolerant SD logging
 - Buffered telemetry recovery
-- Unit-tested flight logic
+- Unit tests for core flight logic
+- CSV-based flight profile replay tests
+- OpenRocket and generic CSV import tooling
 
-All features included in this repository have been validated on real hardware.
+All implemented hardware features have been validated on real hardware. Flight profile replay tests run on the host computer through the PlatformIO native environment.
 
 ---
 
 # Scope
 
-This flight computer targets **model rocketry**.
+This flight computer targets model rocketry.
 
-The flight state machine models a **ballistic flight profile** with parachute
-recovery: powered boost, unpowered coast, a single apogee, and descent under
-recovery. Powered controlled vehicles such as multirotors or fixed-wing aircraft
-are out of scope by design.
+The flight state machine models a ballistic rocket flight profile with parachute recovery: powered boost, unpowered coast, a single apogee, and descent under recovery. Powered controlled vehicles such as multirotors or fixed-wing aircraft are out of scope by design.
 
 ---
 
 # Flight Event Detection
 
-An autonomous flight state machine detects the phases of a rocket flight from
-barometric altitude, independently of GPS fix.
+An autonomous flight state machine detects the phases of rocket flight from barometric altitude, independently of GPS fix.
 
 ## Flight states
 
@@ -111,81 +108,169 @@ IDLE -> BOOST -> COAST -> APOGEE -> DESCENT -> LANDED
 |--------|-----------|
 | IDLE | On the pad, waiting |
 | BOOST | Rapid climb above launch threshold |
-| COAST | Climb rate stops increasing (motor burnout) |
+| COAST | Climb rate stops increasing after boost |
 | APOGEE | Climb rate crosses zero at altitude |
 | DESCENT | Sustained negative climb rate |
 | LANDED | At rest on the ground |
 
-Detection uses the BMP388 barometric altitude with a low-pass filtered climb
-rate and multi-sample confirmation to reject sensor noise. Each detected event
-is reported to the ground station as a MAVLink STATUSTEXT message and signalled
-audibly through the buzzer.
+Detection uses BMP388 barometric altitude with low-pass filtered climb rate and multi-sample confirmation to reject sensor noise. Each detected event is reported to the ground station as a MAVLink STATUSTEXT message and signalled audibly through the buzzer.
 
 ![Flight Events in QGroundControl](docs/images/qgc-flight-events.png)
 
-*Flight event sequence reported to QGroundControl via MAVLink STATUSTEXT, including the on-board computed apogee altitude (69.5 m) from a synthetic flight profile.*
+*Flight event sequence reported to QGroundControl via MAVLink STATUSTEXT, including the on-board computed apogee altitude from a synthetic flight profile.*
+
+---
+
+# Flight Profile Replay Testing
+
+Sprint 14 adds data-driven replay testing for the flight state machine.
+
+Instead of only testing isolated altitude points, full altitude-vs-time CSV profiles are replayed through the same `FlightStateMachine` logic used by the firmware. The detected apogee is compared against the expected apogee declared in a small `.meta` file.
+
+```text
+CSV flight profile -> FlightStateMachine replay -> detected apogee -> expected apogee check
+```
+
+## Current replay profiles
+
+| Profile | Description | Expected Apogee | Purpose |
+|---------|-------------|-----------------|---------|
+| `estes_c6` | Small clean flight | 253.9 m | Nominal flight sequence |
+| `midpower_machdip` | Mid-power transonic mach-dip case | 904.4 m | False barometric dip rejection |
+| `low_apogee` | Low apogee short flight | 71.5 m | Small-flight validation |
+
+The `midpower_machdip` profile is especially important because it includes a synthetic transonic barometric disturbance. The state machine correctly ignores the false dip and detects the real apogee.
+
+## Test results
+
+```text
+RealFlightProfiles/FlightProfileTest.DetectsApogeeWithinTolerance/estes_c6          [PASSED]
+RealFlightProfiles/FlightProfileTest.DetectsApogeeWithinTolerance/midpower_machdip  [PASSED]
+RealFlightProfiles/FlightProfileTest.DetectsApogeeWithinTolerance/low_apogee        [PASSED]
+
+FlightStateMachine.FullFlightSequence               [PASSED]
+FlightStateMachine.IgnoresBarometricNoiseAtIdle     [PASSED]
+FlightStateMachine.DoesNotLaunchOnSlowRise          [PASSED]
+FlightStateMachine.LaunchesOnFastRise               [PASSED]
+FlightStateMachine.ApogeeAltitudeMatchesPeak        [PASSED]
+FlightStateMachine.ResetReturnsToIdle               [PASSED]
+
+9 test cases: 9 succeeded
+```
+
+Run the test suite with:
+
+```bash
+cd firmware/flight-computer
+pio test -e native
+```
+
+---
+
+# Flight Profile Data Format
+
+Flight profiles are stored under:
+
+```text
+firmware/flight-computer/test_profiles/
+```
+
+Each profile uses two files:
+
+```text
+profile_name.csv   -> time and altitude samples
+profile_name.meta  -> expected apogee and tolerance
+```
+
+Example CSV:
+
+```csv
+time_s,altitude_m
+0.05,0.21
+0.10,0.64
+0.15,1.28
+```
+
+Example metadata:
+
+```text
+name: Mid-power - transonic mach dip
+source: synthetic
+expected_apogee_m: 904.4
+tolerance_m: 8.0
+```
+
+The manifest file controls which profiles are included in the test run:
+
+```text
+estes_c6
+midpower_machdip
+low_apogee
+```
+
+This avoids platform-specific directory scanning and keeps test discovery portable.
+
+---
+
+# Importing New Flight Profiles
+
+A Python import tool is provided under:
+
+```text
+firmware/flight-computer/tools/import_profile.py
+```
+
+Supported adapters:
+
+| Source | Use case |
+|---------|----------|
+| `openrocket` | OpenRocket CSV exports with time and altitude columns |
+| `generic` | Generic altimeter or simulator CSV with selectable columns and units |
+
+Example OpenRocket import:
+
+```bash
+python tools/import_profile.py --source openrocket exported_flight.csv my_openrocket_flight
+```
+
+Example generic import:
+
+```bash
+python tools/import_profile.py --source generic altimeter.csv my_real_flight --time-col 0 --alt-col 2 --alt-unit ft --skip-header
+```
+
+The importer creates the internal CSV, generates the `.meta` file, calculates expected apogee and updates `manifest.txt`.
 
 ---
 
 # Audible Event Feedback
 
-An active buzzer provides distinct rhythmic patterns for the main flight and
-system events, so the vehicle state can be followed without a serial console.
+An active buzzer provides distinct rhythmic patterns for system and flight events.
 
 | Event | Pattern |
 |--------|---------|
-| Startup | Power-up chime (system ready) |
-| GPS Lock | Ready chirp (fix acquired) |
+| Startup | Power-up chime |
+| GPS Lock | Ready chirp |
 | Launch | Launch tone |
-| Apogee | Peak alert (priority sound) |
-| Landed | Recovery beacon (repeating, for locating the vehicle) |
+| Apogee | Peak alert with priority |
+| Landed | Recovery beacon |
 | Battery Critical | Warning stutter |
 
-The buzzer driver is non-blocking: patterns play in the background using a
-`millis()`-based state machine, so telemetry, logging and event detection are
-never stalled by a sound. Flight event sounds do not interrupt each other,
-except apogee, which has priority.
+The buzzer driver is non-blocking. Patterns play in the background using a `millis()`-based state machine, so telemetry, logging and event detection are never stalled by a sound. Flight event sounds do not interrupt each other, except apogee, which has priority.
 
-The landing pattern is a deliberately clear, loud repeating beacon intended to
-help locate the vehicle on the ground after recovery.
+The landing pattern is a deliberately clear, loud repeating beacon intended to help locate the vehicle on the ground after recovery.
 
 ---
 
 # Altitude Reference
 
-Flight altitude is computed from the GPS reference altitude captured on the
-first GPS fix, plus the barometric change measured since that instant:
+Flight altitude is computed from the GPS reference altitude captured on the first GPS fix, plus the barometric change measured since that instant:
 
 ```text
 flight_altitude = gps_reference_altitude + (bmp_altitude - bmp_altitude_at_fix)
 ```
 
-This avoids barometric drift accumulated before the fix and keeps the flight
-altitude stable and consistent with the GPS reference at liftoff.
-
----
-
-# Unit Testing
-
-The flight state machine is covered by unit tests running on the host PC through
-the PlatformIO `native` environment with GoogleTest, independently of the ESP32.
-
-```text
-FlightStateMachine.FullFlightSequence            [PASSED]
-FlightStateMachine.IgnoresBarometricNoiseAtIdle  [PASSED]
-FlightStateMachine.DoesNotLaunchOnSlowRise       [PASSED]
-FlightStateMachine.LaunchesOnFastRise            [PASSED]
-FlightStateMachine.ApogeeAltitudeMatchesPeak     [PASSED]
-FlightStateMachine.ResetReturnsToIdle            [PASSED]
-
-6 test cases: 6 succeeded
-```
-
-Run the tests with:
-
-```bash
-pio test -e native
-```
+This avoids barometric drift accumulated before the fix and keeps flight altitude stable and consistent with the GPS reference at liftoff.
 
 ---
 
@@ -193,153 +278,90 @@ pio test -e native
 
 ## Flight Event Detection
 
-✅ Flight State Machine (IDLE → BOOST → COAST → APOGEE → DESCENT → LANDED)
-
-✅ Barometric, GPS-Independent Detection
-
-✅ Launch / Burnout / Apogee / Descent / Landing Detection
-
-✅ Climb Rate Estimation with Noise Rejection
-
-✅ MAVLink STATUSTEXT Event Reporting
-
-✅ Audible Event Feedback
-
-✅ GoogleTest Unit Tests
-
----
+- Flight State Machine (IDLE -> BOOST -> COAST -> APOGEE -> DESCENT -> LANDED)
+- Barometric, GPS-independent detection
+- Launch, burnout, apogee, descent and landing detection
+- Climb rate estimation with noise rejection
+- MAVLink STATUSTEXT event reporting
+- Audible event feedback
+- Unit-tested and replay-tested flight logic
 
 ## Environmental Sensing
 
-✅ BMP388 Pressure Measurement
-
-✅ BMP388 Internal Temperature
-
-✅ DS18B20 External Ambient Temperature
-
-✅ Relative Altitude Estimation
-
-✅ Flight Altitude Calculation
-
-✅ Climb Rate Estimation
-
----
+- BMP388 pressure measurement
+- BMP388 internal temperature
+- DS18B20 external ambient temperature
+- Relative altitude estimation
+- Corrected flight altitude calculation
+- Climb rate estimation
 
 ## Telemetry
 
-✅ GPS Position
-
-✅ GPS Altitude
-
-✅ Ground Speed
-
-✅ UTC Time Synchronization
-
-✅ GPS Timestamped Logging
-
-✅ GPS Fix Monitoring
-
----
+- GPS position
+- GPS altitude
+- Ground speed
+- UTC time synchronization
+- GPS timestamped logging
+- GPS fix monitoring
 
 ## Power Monitoring
 
-✅ INA219 Integration
-
-✅ Battery Voltage Monitoring
-
-✅ Current Measurement
-
-✅ Power Consumption Monitoring
-
-✅ Battery SOC Estimation
-
-✅ Battery Connection Detection
-
-✅ Battery State Monitoring
-
-✅ Battery Event System
-
-✅ Battery Hot-Plug Detection
-
----
+- INA219 integration
+- Battery voltage monitoring
+- Current measurement
+- Power consumption monitoring
+- Battery SOC estimation
+- Battery connection detection
+- Battery state monitoring
+- Battery event system
+- Battery hot-plug detection
 
 ## Logging
 
-✅ Automatic CSV Logging
-
-✅ GPS Timestamped Filenames
-
-✅ Buffered Logging
-
-✅ Automatic Buffer Flush
-
-✅ FIFO Preservation
-
-✅ SD Recovery Logging
-
-✅ Fault-Tolerant Telemetry Storage
-
----
+- Automatic CSV logging
+- GPS timestamped filenames
+- External temperature logging
+- Flight state logging
+- Buffered logging
+- Automatic buffer flush
+- FIFO preservation
+- SD recovery logging
+- Fault-tolerant telemetry storage
 
 ## Reliability
 
-✅ Power-On Self Test (POST)
+- Power-On Self Test (POST)
+- Runtime health monitoring
+- Fault flags
+- Error counters
+- Runtime event system
+- SD state machine
+- SD removal detection
+- SD recovery detection
 
-✅ Runtime Health Monitoring
+## Testing
 
-✅ Fault Flags
-
-✅ Error Counters
-
-✅ Runtime Event System
-
-✅ SD State Machine
-
-✅ SD Removal Detection
-
-✅ SD Recovery Detection
-
----
-
-## MAVLink Telemetry
-
-✅ HEARTBEAT
-
-✅ GPS_RAW_INT
-
-✅ BATTERY_STATUS
-
-✅ GLOBAL_POSITION_INT
-
-✅ GLOBAL_POSITION_INT_COV
-
-✅ SYS_STATUS
-
-✅ VFR_HUD
-
-✅ HOME_POSITION
-
-✅ STATUSTEXT
-
-✅ QGroundControl Integration
+- GoogleTest host-based unit tests
+- Data-driven flight profile replay tests
+- Synthetic mach-dip validation profile
+- OpenRocket/generic CSV import support
+- 9 native tests passing
 
 ---
 
 # MAVLink Telemetry Stack
 
-Current MAVLink implementation validated on real hardware:
-
 | Message | ID | Purpose | Status |
 |----------|-----|---------|---------|
-| HEARTBEAT | 0 | Vehicle presence and link status | ✅ |
-| SYS_STATUS | 1 | System and battery status | ✅ |
-| GPS_RAW_INT | 24 | Raw GNSS position and fix type | ✅ |
-| GLOBAL_POSITION_INT | 33 | Position and relative altitude | ✅ |
-| GLOBAL_POSITION_INT_COV | 63 | Position with covariance | ✅ |
-| VFR_HUD | 74 | Ground speed, altitude, climb rate | ✅ |
-| BATTERY_STATUS | 147 | Battery voltage, current and SOC | ✅ |
-| HOME_POSITION | 242 | Home reference and distance to home | ✅ |
-| STATUSTEXT | 253 | Flight event reporting | ✅ |
+| HEARTBEAT | 0 | Vehicle presence and link status | Validated |
+| SYS_STATUS | 1 | System and battery status | Validated |
+| GPS_RAW_INT | 24 | Raw GNSS position and fix type | Validated |
+| GLOBAL_POSITION_INT | 33 | Position and relative altitude | Validated |
+| GLOBAL_POSITION_INT_COV | 63 | Position with covariance | Validated |
+| VFR_HUD | 74 | Ground speed, altitude, climb rate | Validated |
+| BATTERY_STATUS | 147 | Battery voltage, current and SOC | Validated |
+| HOME_POSITION | 242 | Home reference and distance to home | Validated |
+| STATUSTEXT | 253 | Flight event reporting | Validated |
 
 ---
 
@@ -347,28 +369,27 @@ Current MAVLink implementation validated on real hardware:
 
 ```text
 ESP32 DevKitC V4
-│
-├── BMP388Sensor
-├── ExternalThermometer (DS18B20)
-├── GPSSensor
-├── INA219Sensor
-├── BatteryMonitor
-├── Buzzer
-├── SDLogger
-├── BufferedLogger
-├── SystemHealth
-├── SystemEvents
-├── MAVLinkTelemetry
-├── FlightStateMachine
-├── FlightSimulator
-└── Flight Logger
+|
+|-- BMP388Sensor
+|-- ExternalThermometer (DS18B20)
+|-- GPSSensor
+|-- INA219Sensor
+|-- BatteryMonitor
+|-- Buzzer
+|-- SDLogger
+|-- BufferedLogger
+|-- SystemHealth
+|-- SystemEvents
+|-- MAVLinkTelemetry
+|-- FlightStateMachine
+|-- FlightSimulator
+|-- Flight Profile Replay Tests
+|-- Flight Logger
 ```
 
 ---
 
 # Runtime Event System
-
-Supported events:
 
 ```text
 SYSTEM_START
@@ -398,41 +419,26 @@ BUFFER_FLUSH_COMPLETED
 
 ```text
 System Status
-
 GPS Position
-
 GPS Altitude
-
 Flight Altitude
-
 Relative Altitude
-
 Ground Speed
-
 Climb Rate
-
 Flight State
-
 Home Reference
-
 Distance to Home
-
 Internal Temperature (BMP388)
-
 External Temperature (DS18B20)
-
 Battery Voltage
-
 Battery Current
-
 Battery Remaining %
-
 System Health State
 ```
 
 ---
 
-# CSV Format
+# CSV Log Format
 
 ```csv
 timestamp_s,
@@ -453,161 +459,99 @@ power_mw,
 battery_soc_percent
 ```
 
-The `ext_temperature_c` column records the external DS18B20 ambient
-temperature, and `flight_state` records the detected flight phase for each
-sample (IDLE, BOOST, COAST, APOGEE, DESCENT, LANDED), enabling precise
-post-flight analysis of when each event was detected.
+The `ext_temperature_c` column records external DS18B20 ambient temperature. The `flight_state` column records the detected flight phase for each sample, enabling post-flight analysis of when each event was detected.
+
+---
+
+# Repository Structure
+
+```text
+docs/
+  TestReport_Sprint8.md
+  TestReport_Sprint9.md
+  TestReport_Sprint10.md
+  TestReport_Sprint11.md
+  TestReport_Sprint12.md
+  TestReport_Sprint13a.md
+  TestReport_Sprint14.md
+  images/
+  schematics/
+
+firmware/flight-computer/
+  include/
+  lib/
+  src/
+  test/
+    test_flight_state_machine/
+    test_flight_profiles/
+  test_profiles/
+  tools/
+  platformio.ini
+```
 
 ---
 
 # Validation Status
 
-Validated on real hardware:
+Validated on real hardware where applicable:
 
-✅ GPS Validation
-
-✅ BMP388 Validation
-
-✅ DS18B20 External Temperature Validation
-
-✅ SD Logging Validation
-
-✅ Buffered Logging Validation
-
-✅ FIFO Recovery Validation
-
-✅ SD Recovery Validation
-
-✅ Runtime Health Monitoring Validation
-
-✅ Event System Validation
-
-✅ INA219 Validation
-
-✅ Battery Voltage Validation
-
-✅ Current Measurement Validation
-
-✅ Power Monitoring Validation
-
-✅ Battery SOC Validation
-
-✅ Battery Event Validation
-
-✅ Battery Hot-Plug Validation
-
-✅ CSV Battery Telemetry Validation
-
-✅ Buzzer Pattern Validation
-
-✅ MAVLink HEARTBEAT Validation
-
-✅ MAVLink GPS_RAW_INT Validation
-
-✅ MAVLink BATTERY_STATUS Validation
-
-✅ MAVLink GLOBAL_POSITION_INT Validation
-
-✅ MAVLink GLOBAL_POSITION_INT_COV Validation
-
-✅ MAVLink SYS_STATUS Validation
-
-✅ MAVLink VFR_HUD Validation
-
-✅ MAVLink HOME_POSITION Validation
-
-✅ MAVLink STATUSTEXT Validation
-
-✅ Relative Altitude Validation
-
-✅ Altitude Reference Validation
-
-✅ Climb Rate Validation
-
-✅ Distance to Home Validation
-
-✅ Flight State Machine Unit Tests (6/6)
-
-✅ Flight Simulation Validation
-
-✅ Real Sensor Robustness Validation (no false positives)
-
-✅ Flight Event Detection Validation
-
-✅ Ground Station Instrument Validation
-
-✅ QGroundControl Connection Validation
-
-✅ MAVLink End-to-End Telemetry Validation
-
-✅ No System Regression
+- GPS validation
+- BMP388 validation
+- DS18B20 external temperature validation
+- SD logging validation
+- Buffered logging validation
+- FIFO recovery validation
+- SD recovery validation
+- Runtime health monitoring validation
+- Event system validation
+- INA219 validation
+- Battery voltage validation
+- Current measurement validation
+- Power monitoring validation
+- Battery SOC validation
+- Battery event validation
+- Battery hot-plug validation
+- Buzzer pattern validation
+- MAVLink telemetry validation
+- Relative altitude validation
+- Altitude reference validation
+- Climb rate validation
+- Distance to home validation
+- Flight state machine unit tests
+- Flight profile replay tests
+- Synthetic mach-dip profile validation
+- QGroundControl connection validation
+- No system regression
 
 ---
 
 # Current Status
 
 ```text
-Current Development Stage
-
-Sprint 13a
-
-Environmental Sensing & Audible Feedback
-
-Validated on Real Hardware
+Current Development Stage: Sprint 14
+Focus: Flight Profile Replay Testing
+Status: Validated with 9/9 native tests passing
 ```
 
 Current capabilities:
 
 ```text
 GPS Telemetry
-
 Barometric Altitude Estimation
-
 Dual Temperature Sensing
-
 Climb Rate Estimation
-
 Autonomous Flight Event Detection
-
 Audible Event Feedback
-
 Battery Monitoring
-
 System Health Monitoring
-
 Fault-Tolerant SD Logging
-
 MAVLink Telemetry
-
 Ground Station Instrumentation
-
 Home Reference & Distance to Home
-
 QGroundControl Connectivity
-
 Unit-Tested Flight Logic
-```
-
----
-
-# Documentation
-
-```text
-docs/TestReport_Sprint8.md
-
-docs/TestReport_Sprint9.md
-
-docs/TestReport_Sprint10.md
-
-docs/TestReport_Sprint11.md
-
-docs/TestReport_Sprint12.md
-
-docs/TestReport_Sprint13a.md
-
-docs/schematics/
-
-docs/images/
+CSV Flight Profile Replay Testing
+OpenRocket / Generic CSV Import Tooling
 ```
 
 ---
@@ -616,15 +560,9 @@ docs/images/
 
 ```text
 Recovery Deployment Output (servo)
-
-Flight Profile Replay Testing
-
 Inertial Measurement Unit (GY-87)
-
 Long-Range Telemetry (LoRa)
-
 Raspberry Pi Ground Station
-
 Field Test Campaign
 ```
 
