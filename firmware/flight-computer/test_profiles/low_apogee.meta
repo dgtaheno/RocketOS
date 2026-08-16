@@ -1,0 +1,4 @@
+name: Low apogee - short flight
+source: synthetic
+expected_apogee_m: 71.5
+tolerance_m: 3.0

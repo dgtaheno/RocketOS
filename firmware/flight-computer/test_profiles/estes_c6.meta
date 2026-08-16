@@ -1,0 +1,4 @@
+name: Small rocket - clean flight
+source: synthetic
+expected_apogee_m: 253.9
+tolerance_m: 4.0

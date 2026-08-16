@@ -1,0 +1,4 @@
+name: Mid-power - transonic mach dip
+source: synthetic
+expected_apogee_m: 904.4
+tolerance_m: 8.0
