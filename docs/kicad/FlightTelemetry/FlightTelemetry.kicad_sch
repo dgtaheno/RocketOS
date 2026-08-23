@@ -2652,12 +2652,6 @@
 			(embedded_fonts no)
 		)
 	)
-	(junction
-		(at 34.29 54.61)
-		(diameter 0)
-		(color 0 0 0 0)
-		(uuid "ff71e780-d455-4fb5-bd8e-0256041184e0")
-	)
 	(wire
 		(pts
 			(xy 137.16 88.9) (xy 147.32 88.9)
@@ -2670,7 +2664,7 @@
 	)
 	(wire
 		(pts
-			(xy 34.29 54.61) (xy 34.29 58.42)
+			(xy 34.29 50.8) (xy 34.29 58.42)
 		)
 		(stroke
 			(width 0)
@@ -2910,16 +2904,6 @@
 	)
 	(wire
 		(pts
-			(xy 34.29 54.61) (xy 38.1 54.61)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "782d0f6f-cbe1-4eab-8204-87a7c88481a1")
-	)
-	(wire
-		(pts
 			(xy 210.82 57.15) (xy 220.98 57.15)
 		)
 		(stroke
@@ -2937,16 +2921,6 @@
 			(type default)
 		)
 		(uuid "7ffcd498-5665-49fe-92cc-6b3709153d97")
-	)
-	(wire
-		(pts
-			(xy 34.29 50.8) (xy 34.29 54.61)
-		)
-		(stroke
-			(width 0)
-			(type default)
-		)
-		(uuid "80542cfb-c853-46a0-b245-179c43d4d116")
 	)
 	(wire
 		(pts
@@ -3527,30 +3501,6 @@
 			(justify right bottom)
 		)
 		(uuid "f05e436b-3504-499b-b3a7-335def0b4cd4")
-	)
-	(global_label "IN+ {slash} MP1584"
-		(shape input)
-		(at 38.1 54.61 0)
-		(fields_autoplaced yes)
-		(effects
-			(font
-				(size 1.27 1.27)
-			)
-			(justify left)
-		)
-		(uuid "09bbd174-2d2e-41ce-907c-929907f54b42")
-		(property "Intersheetrefs" "${INTERSHEET_REFS}"
-			(at 55.418 54.61 0)
-			(hide yes)
-			(show_name no)
-			(do_not_autoplace no)
-			(effects
-				(font
-					(size 1.27 1.27)
-				)
-				(justify left)
-			)
-		)
 	)
 	(global_label "I{slash}O- Active Buzzer"
 		(shape input)
