@@ -5,6 +5,7 @@
 *.lck
 *-backups/
 *.bak
+*.kicad_prl
 
 # =========================
 # Operating System
