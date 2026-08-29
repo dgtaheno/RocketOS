@@ -5,7 +5,7 @@
 	(uuid "e31ac7f1-555d-4190-a97f-833d688a3009")
 	(paper "A4")
 	(title_block
-		(title "Flight Telemetry & Data Logger")
+		(title "RocketOS")
 		(rev "v0.14.0")
 		(comment 1 "INA219 / MP1584 / Tattu LiPo2S 550 mAh")
 		(comment 2 "ESP32 DevKitC V4 / Validated on real hardware")
@@ -7769,3 +7769,4 @@
 	)
 	(embedded_fonts no)
 )
+

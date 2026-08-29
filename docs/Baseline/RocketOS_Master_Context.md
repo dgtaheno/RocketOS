@@ -5,7 +5,7 @@ Author: David Garcia-Taheño
 Document status: Baseline Reconciled v3
 
 Repository reference:
-- Repository: flight-telemetry-data-logger
+- Repository: RocketOS
 - Branch: main
 - Audited commit: 1b3023f8f2e982317c91b58bc29e1a734755e9d3
 - Latest release identified during the audit: v0.14.1

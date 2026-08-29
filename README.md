@@ -1,4 +1,4 @@
-# Flight Telemetry & Data Logger
+# RocketOS
 
 ESP32-based flight computer featuring GPS telemetry, barometric altitude estimation, dual temperature sensing, battery monitoring, MAVLink telemetry, autonomous flight event detection, audible event feedback, fault-tolerant SD logging, data-driven flight profile replay testing and serial hardware flight profile replay.
 
@@ -72,7 +72,7 @@ Hardware platform used during validation testing.
 
 # Overview
 
-Flight Telemetry & Data Logger is a modular ESP32-based flight computer for model rocketry. It is designed for telemetry acquisition, altitude estimation, environmental sensing, power monitoring, autonomous flight event detection, ground station interoperability, reliable flight data recording and repeatable validation using replayed flight profiles.
+RocketOS is a modular open-source flight computer, telemetry, data-logging, validation and post-flight analysis ecosystem for experimental model rocketry.
 
 The project combines:
 

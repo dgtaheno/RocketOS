@@ -4,7 +4,7 @@
 // System Information
 // =====================================================
 
-#define SYSTEM_NAME                    "Flight Telemetry & Data Logger"
+#define SYSTEM_NAME                    "RocketOS"
 #define SYSTEM_VERSION                 "0.8.0"
 
 // =====================================================
