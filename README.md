@@ -12,9 +12,19 @@ ESP32-based flight computer featuring GPS telemetry, barometric altitude estimat
 ![MAVLink](https://img.shields.io/badge/MAVLink-Telemetry-success)
 ![QGroundControl](https://img.shields.io/badge/QGroundControl-Validated-success)
 ![Tests](https://img.shields.io/badge/Tests-9_passing-brightgreen)
-![Status](https://img.shields.io/badge/Status-Sprint14b-blue)
+![Status](https://img.shields.io/badge/Status-Mk1_Power_Deck_Development-blue)
 ![Language](https://img.shields.io/badge/Language-C%2B%2B-blue)
 ![PlatformIO](https://img.shields.io/badge/PlatformIO-Enabled-success)
+
+---
+
+# Project Status
+
+RocketOS is currently an advanced bench prototype and pre-flight integration platform. The implemented ESP32 DevKitC V4 firmware provides sensing, logging, telemetry, health monitoring, flight-state detection and replay validation.
+
+RocketOS Mk1 targets an ESP32-S3 SuperMini N16R8, a fixed 2S LiPo architecture and a modular deck-based hardware stack for a 54 mm airframe. The Power Deck is under development and has not yet been fabricated or electrically validated.
+
+The current Mk1 development battery is a Tattu 2S 550 mAh LiPo. The firmware BatteryMonitor was migrated from 4S to 2S and bench validated on 2026-08-28.
 
 ---
 
@@ -29,7 +39,7 @@ Hardware platform used during validation testing.
 # Hardware
 
 | Component | Model | Function |
-|------------|--------|----------|
+|------------|-------|----------|
 | Microcontroller | ESP32 DevKitC V4 | Flight computer |
 | GNSS Receiver | u-blox NEO-M9N | Position, altitude, UTC time |
 | Barometric Sensor | BMP388 | Pressure, temperature, relative altitude |
@@ -37,8 +47,8 @@ Hardware platform used during validation testing.
 | Power Monitor | INA219 | Voltage, current, power |
 | Storage | MicroSD Module | Flight data logging |
 | Audible Feedback | Active Buzzer | Event feedback and recovery beacon |
-| Power Supply | MP1584 Buck Converter | Regulated 5V rail |
-| Battery | Tattu LiPo 4S | Bench power source |
+| Power Supply | MP1584 Buck Converter | Regulated 5 V rail |
+| Battery | Tattu LiPo 2S 550 mAh | Current Mk1 development battery |
 
 <table>
   <tr>
@@ -49,7 +59,7 @@ Hardware platform used during validation testing.
   <tr>
     <td align="center"><img src="docs/images/microsd.png" width="150"><br><b>MicroSD</b></td>
     <td align="center"><img src="docs/images/MP1584.png" width="150"><br><b>MP1584</b></td>
-    <td align="center"><img src="docs/images/Tattu4S.png" width="150"><br><b>Tattu LiPo 4S</b></td>
+    <td align="center"><img src="docs/images/Tattu2S.png" width="150"><br><b>LiPo 2S Tattu 550 mAh</b></td>
   </tr>
   <tr>
     <td align="center"><img src="docs/images/ext-thermometer.png" width="150"><br><b>DS18B20</b></td>
@@ -83,7 +93,7 @@ The project combines:
 - Serial hardware flight profile replay on ESP32
 - OpenRocket and generic CSV import tooling
 
-All implemented hardware features have been validated on real hardware. Flight profile replay tests run both on the host computer through the PlatformIO native environment and on the ESP32 through USB serial replay.
+The validation status of each subsystem is documented separately. Flight-profile replay tests run both on the host computer through the PlatformIO native environment and on the ESP32 through USB serial replay. This evidence does not establish that the complete RocketOS Mk1 hardware stack is flight validated.
 
 ---
 
@@ -106,7 +116,7 @@ IDLE -> BOOST -> COAST -> APOGEE -> DESCENT -> LANDED
 ```
 
 | State | Detection |
-|--------|-----------|
+|-------|-----------|
 | IDLE | On the pad, waiting |
 | BOOST | Rapid climb above launch threshold |
 | COAST | Climb rate stops increasing after boost |
@@ -325,7 +335,7 @@ firmware/flight-computer/tools/import_profile.py
 Supported adapters:
 
 | Source | Use case |
-|---------|----------|
+|--------|----------|
 | `openrocket` | OpenRocket CSV exports with time and altitude columns |
 | `generic` | Generic altimeter or simulator CSV with selectable columns and units |
 
@@ -350,7 +360,7 @@ The importer creates the internal CSV, generates the `.meta` file, calculates ex
 An active buzzer provides distinct rhythmic patterns for system and flight events.
 
 | Event | Pattern |
-|--------|---------|
+|-------|---------|
 | Startup | Power-up chime |
 | GPS Lock | Ready chirp |
 | Launch | Launch tone |
@@ -417,6 +427,11 @@ This avoids barometric drift accumulated before the fix and keeps flight altitud
 - Battery state monitoring
 - Battery event system
 - Battery hot-plug detection
+- Fixed 2S LiPo monitoring baseline
+- Battery disconnected below 5.0 V
+- SOC curve from 6.60 V = 0% to 8.40 V = 100%
+- Warning threshold at 7.20 V
+- Critical threshold at 6.80 V
 
 ## Logging
 
@@ -456,7 +471,7 @@ This avoids barometric drift accumulated before the fix and keeps flight altitud
 # MAVLink Telemetry Stack
 
 | Message | ID | Purpose | Status |
-|----------|-----|---------|---------|
+|---------|----|---------|--------|
 | HEARTBEAT | 0 | Vehicle presence and link status | Validated |
 | SYS_STATUS | 1 | System and battery status | Validated |
 | GPS_RAW_INT | 24 | Raw GNSS position and fix type | Validated |
@@ -599,7 +614,7 @@ firmware/flight-computer/
 
 # Validation Status
 
-Validated on real hardware where applicable:
+Repository-reported and bench validation evidence includes:
 
 - GPS validation
 - BMP388 validation
@@ -631,14 +646,29 @@ Validated on real hardware where applicable:
 - QGroundControl connection validation
 - No system regression
 
+## 2S BatteryMonitor Bench Validation
+
+Validated on 2026-08-28 after migration from the historical 4S configuration:
+
+- USB-powered hardware with the LiPo disconnected: 4.10-4.13 V, reported `DISCONNECTED`.
+- Connected 2S LiPo: 7.72-7.90 V, reported `CONNECTED` / `OK` with a coherent SOC estimate.
+- Battery disconnected threshold: below 5.0 V.
+- SOC endpoints: 6.60 V = 0% and 8.40 V = 100%.
+- Warning threshold: 7.20 V.
+- Critical threshold: 6.80 V.
+
+This validates BatteryMonitor behavior on the current bench prototype. It does not claim that the Power Deck PCB has been fabricated, assembled, brought up or electrically validated.
+
 ---
 
 # Current Status
 
 ```text
-Current Development Stage: Sprint 14b
-Focus: Serial Hardware Flight Profile Replay
-Status: Native tests 9/9 passing + hardware replay validated
+Current Development Stage: RocketOS Mk1 power architecture development
+Focus: Power Deck v0.1 schematic and PCB development
+Firmware Status: Native tests 9/9 passing + hardware replay validated
+Battery Status: Fixed 2S baseline + BatteryMonitor bench validated
+Power Deck Status: Under development; not fabricated or electrically validated
 ```
 
 Current capabilities:
@@ -668,6 +698,10 @@ OpenRocket / Generic CSV Import Tooling
 # Next Milestones
 
 ```text
+Complete Power Deck v0.1 schematic
+Assign verified physical footprints
+Pass KiCad ERC and DRC
+Review Power Deck before fabrication
 Recovery Deployment Output (servo)
 Inertial Measurement Unit (GY-87)
 Long-Range Telemetry (LoRa)
