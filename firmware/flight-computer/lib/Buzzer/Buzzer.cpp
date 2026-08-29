@@ -1,68 +1,94 @@
 #include "Buzzer.h"
 
 // =====================================================
-// Flight event patterns
-// Original rhythmic patterns. Active buzzer: single tone,
-// character comes from timing (staccato bursts).
+// RocketOS Sound Identity
+// Active Buzzer Edition
 // =====================================================
 
-// STARTUP — "power-up chime": quick ascending chatter
-// then a confirming tone. Signals the system is awake.
+// BOOT
+// ti-ti-ti ... tiiii ... TIIIIIIII
 static const BuzzerNote PATTERN_STARTUP[] = {
-    {40, 50}, {40, 40}, {30, 40}, {30, 30}, {60, 40}, {250, 250}
+    {80, 80},
+    {80, 80},
+    {80, 200},
+    {250, 150},
+    {600, 0}
 };
 
-// GPS LOCK — "ready chirp": two quick excited beeps.
-// Confirms GPS fix acquired.
+// GPS LOCK
+// ti ... ti
 static const BuzzerNote PATTERN_GPS_LOCK[] = {
-    {40, 40}, {40, 40}, {90, 250}
+    {100, 150},
+    {100, 0}
 };
 
-// IGNITION — "launch tone": one long, strong beep.
-// Marks liftoff detection.
+// IGNITION
+// TIIIIIIIIIIII
 static const BuzzerNote PATTERN_IGNITION[] = {
-    {600, 300}
+    {700, 0}
 };
 
-// APOGEE — "peak alert": rapid rising burst then a hold.
-// Marks apogee detection. Highest priority sound.
+// APOGEE
+// ti-ti-ti-TIIII
 static const BuzzerNote PATTERN_APOGEE[] = {
-    {40, 40}, {40, 40}, {40, 40}, {40, 40}, {300, 300}
+    {60, 60},
+    {60, 60},
+    {60, 60},
+    {300, 0}
 };
 
-// LOCATOR — "recovery beacon": strong double beep, repeated.
-// Kept deliberately clear and loud to find the vehicle
-// on the ground. Not decorative.
+// LOCATOR
+// ti-ti ..... (repeat)
 static const BuzzerNote PATTERN_LOCATOR[] = {
-    {150, 120}, {150, 1500}
+    {150, 120},
+    {150, 2000}
 };
 
-// ALARM — "warning stutter": urgent triple burst, repeated.
-// Used for critical battery or fault conditions.
+// ALARM
+// TIIII TIIII TIIII
 static const BuzzerNote PATTERN_ALARM[] = {
-    {40, 40}, {40, 40}, {40, 250}
+    {300, 100},
+    {300, 100},
+    {300, 800}
 };
 
+// =====================================================
+// Constructor
 // =====================================================
 
 Buzzer::Buzzer()
 {
     buzzerPin = 255;
+
     currentPattern = nullptr;
+
     patternLength = 0;
     currentNote = 0;
+
     repeating = false;
     noteActive = false;
+
     phaseStart = 0;
+
     playing = false;
 }
+
+// =====================================================
+// Begin
+// =====================================================
 
 void Buzzer::begin(uint8_t pin)
 {
     buzzerPin = pin;
+
     pinMode(buzzerPin, OUTPUT);
+
     digitalWrite(buzzerPin, LOW);
 }
+
+// =====================================================
+// Load Pattern
+// =====================================================
 
 void Buzzer::loadPattern(
     const BuzzerNote* notes,
@@ -70,73 +96,129 @@ void Buzzer::loadPattern(
     bool repeat)
 {
     currentPattern = notes;
+
     patternLength = count;
+
     repeating = repeat;
+
     currentNote = 0;
+
     noteActive = true;
+
     phaseStart = millis();
+
     playing = true;
 
-    // Start the first note immediately.
     digitalWrite(buzzerPin, HIGH);
 }
+
+// =====================================================
+// Play Pattern
+// =====================================================
 
 void Buzzer::play(BuzzerPattern pattern)
 {
     switch (pattern)
     {
         case BUZZER_STARTUP:
-            loadPattern(PATTERN_STARTUP,
-                sizeof(PATTERN_STARTUP) / sizeof(BuzzerNote), false);
+
+            loadPattern(
+                PATTERN_STARTUP,
+                sizeof(PATTERN_STARTUP) / sizeof(BuzzerNote),
+                false);
+
             break;
 
         case BUZZER_GPS_LOCK:
-            loadPattern(PATTERN_GPS_LOCK,
-                sizeof(PATTERN_GPS_LOCK) / sizeof(BuzzerNote), false);
+
+            loadPattern(
+                PATTERN_GPS_LOCK,
+                sizeof(PATTERN_GPS_LOCK) / sizeof(BuzzerNote),
+                false);
+
             break;
 
         case BUZZER_IGNITION:
-            loadPattern(PATTERN_IGNITION,
-                sizeof(PATTERN_IGNITION) / sizeof(BuzzerNote), false);
+
+            loadPattern(
+                PATTERN_IGNITION,
+                sizeof(PATTERN_IGNITION) / sizeof(BuzzerNote),
+                false);
+
             break;
 
         case BUZZER_APOGEE:
-            loadPattern(PATTERN_APOGEE,
-                sizeof(PATTERN_APOGEE) / sizeof(BuzzerNote), false);
+
+            loadPattern(
+                PATTERN_APOGEE,
+                sizeof(PATTERN_APOGEE) / sizeof(BuzzerNote),
+                false);
+
             break;
 
         case BUZZER_ALARM:
-            loadPattern(PATTERN_ALARM,
-                sizeof(PATTERN_ALARM) / sizeof(BuzzerNote), false);
+
+            loadPattern(
+                PATTERN_ALARM,
+                sizeof(PATTERN_ALARM) / sizeof(BuzzerNote),
+                false);
+
             break;
 
         case BUZZER_LOCATOR:
+
             startLocator();
+
             break;
 
+        case BUZZER_NONE:
         default:
+
             stop();
+
             break;
     }
 }
 
+// =====================================================
+// Locator
+// =====================================================
+
 void Buzzer::startLocator()
 {
-    loadPattern(PATTERN_LOCATOR,
-        sizeof(PATTERN_LOCATOR) / sizeof(BuzzerNote), true);
+    loadPattern(
+        PATTERN_LOCATOR,
+        sizeof(PATTERN_LOCATOR) / sizeof(BuzzerNote),
+        true);
 }
+
+// =====================================================
+// Stop
+// =====================================================
 
 void Buzzer::stop()
 {
     playing = false;
+
     currentPattern = nullptr;
+
     digitalWrite(buzzerPin, LOW);
 }
+
+// =====================================================
+// State
+// =====================================================
 
 bool Buzzer::isPlaying() const
 {
     return playing;
 }
+
+// =====================================================
+// Update
+// Non-blocking state machine.
+// Must be called regularly from loop().
+// =====================================================
 
 void Buzzer::update()
 {
@@ -146,21 +228,24 @@ void Buzzer::update()
     }
 
     uint32_t now = millis();
-    const BuzzerNote& note = currentPattern[currentNote];
+
+    const BuzzerNote& note =
+        currentPattern[currentNote];
 
     if (noteActive)
     {
-        // Currently sounding. Has the "on" time elapsed?
         if (now - phaseStart >= note.onMs)
         {
             digitalWrite(buzzerPin, LOW);
+
             noteActive = false;
+
             phaseStart = now;
 
-            // If there is no off time, skip straight to next note.
             if (note.offMs == 0)
             {
                 noteActive = true;
+
                 currentNote++;
 
                 if (currentNote >= patternLength)
@@ -177,13 +262,13 @@ void Buzzer::update()
                 }
 
                 digitalWrite(buzzerPin, HIGH);
+
                 phaseStart = now;
             }
         }
     }
     else
     {
-        // Currently silent. Has the "off" time elapsed?
         if (now - phaseStart >= note.offMs)
         {
             currentNote++;
@@ -202,7 +287,9 @@ void Buzzer::update()
             }
 
             noteActive = true;
+
             digitalWrite(buzzerPin, HIGH);
+
             phaseStart = now;
         }
     }
