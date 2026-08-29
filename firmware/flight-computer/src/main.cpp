@@ -90,12 +90,25 @@ float mavBatterySoc = 0.0f;
 bool mavBatteryConnected = false;
 
 // --------------------------------------------------
+// SD Runtime State
+// --------------------------------------------------
+
+bool sdAvailable = false;
+
+// --------------------------------------------------
 // Helper: Write Telemetry Record to SD
 // --------------------------------------------------
 
 bool writeTelemetryRecordToSd(
     const TelemetryRecord& record)
 {
+#if SD_LOGGER_ENABLED
+
+    if (!sdAvailable)
+    {
+        return false;
+    }
+
     return logger.writeData(
         record.timestamp,
         record.temperature,
@@ -113,6 +126,14 @@ bool writeTelemetryRecordToSd(
         record.current_mA,
         record.power_mW,
         record.batterySoc);
+
+#else
+
+    (void)record;
+
+    return false;
+
+#endif
 }
 
 // --------------------------------------------------
@@ -121,6 +142,13 @@ bool writeTelemetryRecordToSd(
 
 bool flushBufferedRecords()
 {
+#if SD_LOGGER_ENABLED
+
+    if (!sdAvailable)
+    {
+        return false;
+    }
+
     if (telemetryBuffer.isEmpty())
     {
         return true;
@@ -133,10 +161,8 @@ bool flushBufferedRecords()
     {
         TelemetryRecord pendingRecord;
 
-        // IMPORTANT:
         // Use peek() first to preserve FIFO order.
-        // Only remove the record from the buffer
-        // after it has been written successfully.
+        // Only remove the record after a successful write.
         if (!telemetryBuffer.peek(pendingRecord))
         {
             return false;
@@ -166,6 +192,12 @@ bool flushBufferedRecords()
         EVENT_BUFFER_FLUSH_COMPLETED);
 
     return true;
+
+#else
+
+    return false;
+
+#endif
 }
 
 // --------------------------------------------------
@@ -174,8 +206,21 @@ bool flushBufferedRecords()
 
 void updateSdHealth()
 {
-    uint64_t totalBytes = logger.getTotalBytes();
-    uint64_t usedBytes = logger.getUsedBytes();
+#if SD_LOGGER_ENABLED
+
+    if (!sdAvailable)
+    {
+        health.reportSdFailure(
+            SD_ERROR_NOT_INITIALIZED);
+
+        return;
+    }
+
+    uint64_t totalBytes =
+        logger.getTotalBytes();
+
+    uint64_t usedBytes =
+        logger.getUsedBytes();
 
     if (events.isSdRemoved())
     {
@@ -196,6 +241,13 @@ void updateSdHealth()
     health.updateSdStorage(
         totalBytes,
         usedBytes);
+
+#else
+
+    // SD logging is intentionally disabled.
+    // Do not access the SD driver or report a hardware fault.
+
+#endif
 }
 
 // --------------------------------------------------
@@ -259,13 +311,13 @@ void updateBatteryEvents()
     // --------------------------------------------------
 
     if (!batteryPreviouslyConnected &&
-         batteryConnected)
+        batteryConnected)
     {
         events.logEvent(
             EVENT_BATTERY_CONNECTED);
     }
     else if (batteryPreviouslyConnected &&
-            !batteryConnected)
+             !batteryConnected)
     {
         events.logEvent(
             EVENT_BATTERY_DISCONNECTED);
@@ -311,7 +363,9 @@ void printHealthIfNeeded()
 
         health.printStatus();
 
+#if SD_LOGGER_ENABLED
         events.printSdState();
+#endif
 
         Serial.println();
         Serial.println("Buffered Logging");
@@ -545,18 +599,18 @@ void setup()
     // SD Card
     // --------------------------------------------------
 
-    if (!logger.begin())
+#if SD_LOGGER_ENABLED
+
+    Serial.println("[INFO] Initializing SD card...");
+
+    sdAvailable = logger.begin();
+
+    if (!sdAvailable)
     {
         health.reportSdFailure(
             SD_ERROR_NOT_INITIALIZED);
 
         Serial.println("[FAIL] SD card not detected");
-        Serial.println();
-        Serial.println("Please check:");
-        Serial.println(" - microSD card is inserted");
-        Serial.println(" - SD module wiring");
-        Serial.println(" - SD module power supply (5V)");
-        Serial.println(" - SD card format (FAT32)");
 
 #if HALT_ON_SD_FAIL
         while (1)
@@ -565,26 +619,43 @@ void setup()
         }
 #endif
     }
-
-    if (!logger.selfTest())
+    else
     {
-        health.reportSdFailure(
-            SD_ERROR_SELFTEST_FAILED);
+        if (!logger.selfTest())
+        {
+            sdAvailable = false;
 
-        Serial.println("[FAIL] SD card self-test failed");
+            health.reportSdFailure(
+                SD_ERROR_SELFTEST_FAILED);
+
+            Serial.println(
+                "[FAIL] SD card self-test failed");
 
 #if HALT_ON_SD_FAIL
-        while (1)
-        {
-            delay(1000);
-        }
+            while (1)
+            {
+                delay(1000);
+            }
 #endif
+        }
+        else
+        {
+            health.reportSdOk();
+
+            updateSdHealth();
+
+            Serial.println("[PASS] SD card");
+        }
     }
 
-    health.reportSdOk();
-    updateSdHealth();
+#else
 
-    Serial.println("[PASS] SD card");
+    sdAvailable = false;
+
+    Serial.println(
+        "[SKIP] SD logger disabled in Config.h");
+
+#endif
 
 #if GPS_ENABLED
 
@@ -647,74 +718,69 @@ void setup()
     // Create Flight Log
     // --------------------------------------------------
 
+#if SD_LOGGER_ENABLED
+
+    if (sdAvailable)
+    {
+        bool logCreated = false;
+
 #if GPS_ENABLED
 
-    if (gps.hasFix())
-    {
-        Serial.println("[INFO] Creating GPS timestamped log file");
-
-        if (!logger.createLogFile(
-                gps.getLocalDate(),
-                gps.getLocalTime()))
+        if (gps.hasFix())
         {
-            health.reportSdFailure(
-                SD_ERROR_FILE_CREATION_FAILED);
+            Serial.println(
+                "[INFO] Creating GPS timestamped log file");
 
-            Serial.println("[FAIL] Flight log creation failed");
-
-#if HALT_ON_SD_FAIL
-            while (1)
-            {
-                delay(1000);
-            }
-#endif
+            logCreated =
+                logger.createLogFile(
+                    gps.getLocalDate(),
+                    gps.getLocalTime());
         }
-    }
-    else
-    {
-        Serial.println("[WARN] GPS fix unavailable");
-        Serial.println("[INFO] Using fallback filename");
+        else
+        {
+            Serial.println(
+                "[WARN] GPS fix unavailable");
 
-        if (!logger.createLogFile())
+            Serial.println(
+                "[INFO] Using fallback filename");
+
+            logCreated =
+                logger.createLogFile();
+        }
+
+#else
+
+        logCreated =
+            logger.createLogFile();
+
+#endif
+
+        if (!logCreated)
         {
             health.reportSdFailure(
                 SD_ERROR_FILE_CREATION_FAILED);
 
-            Serial.println("[FAIL] Flight log creation failed");
+            Serial.println(
+                "[FAIL] Flight log creation failed");
+        }
+        else
+        {
+            health.reportSdOk();
 
-#if HALT_ON_SD_FAIL
-            while (1)
-            {
-                delay(1000);
-            }
-#endif
+            updateSdHealth();
+
+            Serial.print("[PASS] Flight log: ");
+            Serial.println(
+                logger.getLogFileName());
         }
     }
 
 #else
 
-    if (!logger.createLogFile())
-    {
-        health.reportSdFailure(
-            SD_ERROR_FILE_CREATION_FAILED);
-
-        Serial.println("[FAIL] Flight log creation failed");
-
-#if HALT_ON_SD_FAIL
-        while (1)
-        {
-            delay(1000);
-        }
-#endif
-    }
+    Serial.println(
+        "[SKIP] Flight log creation disabled");
 
 #endif
-
-    health.reportSdOk();
-    updateSdHealth();
-
-    Serial.print("[PASS] Flight log: ");
-    Serial.println(logger.getLogFileName());
 
     Serial.println();
     Serial.println("All systems passed");
@@ -737,16 +803,19 @@ void setup()
     health.printStatus();
 
 #if BUZZER_ENABLED
+
     buzzer.begin(BUZZER_PIN);
 
     // Play the startup fanfare to completion here, before the
     // main loop starts, so heavy loop tasks (SD, MAVLink) don't
     // interrupt the pattern and make it stutter.
     buzzer.play(BUZZER_STARTUP);
+
     while (buzzer.isPlaying())
     {
         buzzer.update();
     }
+
 #endif
 
 #if SERIAL_PROFILE_REPLAY_MODE
@@ -768,6 +837,7 @@ void loop()
     // Runs once, 15 seconds after boot, so QGroundControl has
     // time to connect and receive the STATUSTEXT events.
     static uint32_t lastSimRun = 0;
+
     if (millis() - lastSimRun > 30000)
     {
         lastSimRun = millis();
@@ -865,7 +935,7 @@ void loop()
         float mavRelativeAltitude =
             gpsReferenceCaptured
                 ? gpsReferenceAltitude +
-                (bmp.getRelativeAltitude() - bmpAltitudeAtReference)
+                    (bmp.getRelativeAltitude() - bmpAltitudeAtReference)
                 : mavGpsAltitude;
 
         // Height above the barometric reference point.
@@ -1136,9 +1206,11 @@ void loop()
         record.temperature = temperature;
         record.pressure = pressure;
         record.bmpAltitude = bmpAltitude;
-        record.extTemperature = externalTempValid ? externalTemperature : 0.0f;
+        record.extTemperature =
+            externalTempValid ? externalTemperature : 0.0f;
 
-        record.flightState = (uint8_t)flightState.getState();
+        record.flightState =
+            (uint8_t)flightState.getState();
 
         record.gpsFix = gpsFix;
 
@@ -1153,7 +1225,8 @@ void loop()
         record.batteryVoltage = batteryVoltage;
         record.current_mA = current_mA;
         record.power_mW = power_mW;
-        record.batterySoc = batteryMonitor.getPercentage();
+        record.batterySoc =
+            batteryMonitor.getPercentage();
 
         // --------------------------------------------------
         // Store Telemetry
@@ -1161,41 +1234,38 @@ void loop()
 
         bool writeOk = false;
 
-        if (!telemetryBuffer.isEmpty())
+#if SD_LOGGER_ENABLED
+
+        if (sdAvailable)
         {
-            if (!telemetryBuffer.push(record))
-            {
-                events.logEvent(
-                    EVENT_BUFFER_OVERFLOW);
-            }
-
-            writeOk =
-                flushBufferedRecords();
-        }
-        else
-        {
-            writeOk =
-                writeTelemetryRecordToSd(record);
-
-            events.updateSdState(
-                true,
-                writeOk,
-                logger.isStorageFull());
-
-            if (!writeOk)
+            if (!telemetryBuffer.isEmpty())
             {
                 if (!telemetryBuffer.push(record))
                 {
                     events.logEvent(
                         EVENT_BUFFER_OVERFLOW);
                 }
-                else
-                {
-                    events.logEvent(
-                        EVENT_BUFFER_RECORD_STORED);
-                }
+
+                writeOk =
+                    flushBufferedRecords();
             }
+            else
+            {
+                writeOk =
+                    writeTelemetryRecordToSd(record);
+            }
+
+            events.updateSdState(
+                true,
+                writeOk,
+                logger.isStorageFull());
+
+            updateSdHealth();
         }
+
+#endif
+
+#if SD_LOGGER_ENABLED
 
         // --------------------------------------------------
         // Health Reporting
@@ -1225,6 +1295,8 @@ void loop()
         }
 
         updateSdHealth();
+
+#endif
 
 #if PRINT_TELEMETRY_TO_SERIAL
 
@@ -1258,7 +1330,8 @@ void loop()
         }
 
         Serial.print("Flight State: ");
-        Serial.println(flightState.getStateString());
+        Serial.println(
+            flightState.getStateString());
 
         Serial.println();
 
@@ -1294,7 +1367,8 @@ void loop()
         }
         else
         {
-            Serial.println("INA219      : NOT AVAILABLE");
+            Serial.println(
+                "INA219      : NOT AVAILABLE");
 
             Serial.print("Battery Conn: ");
             Serial.println("NO");
@@ -1311,10 +1385,12 @@ void loop()
         Serial.println();
 
         Serial.print("GPS Detected: ");
-        Serial.println(gpsDetected ? "YES" : "NO");
+        Serial.println(
+            gpsDetected ? "YES" : "NO");
 
         Serial.print("GPS Fix     : ");
-        Serial.println(gpsFix ? "YES" : "NO");
+        Serial.println(
+            gpsFix ? "YES" : "NO");
 
         if (gpsFix)
         {
@@ -1337,13 +1413,16 @@ void loop()
             Serial.println(" km/h");
 
             Serial.print("UTC Date    : ");
-            Serial.println(gps.getUtcDate());
+            Serial.println(
+                gps.getUtcDate());
 
             Serial.print("UTC Time    : ");
-            Serial.println(gps.getUtcTime());
+            Serial.println(
+                gps.getUtcTime());
 
             Serial.print("Local Time  : ");
-            Serial.println(gps.getLocalTime());
+            Serial.println(
+                gps.getLocalTime());
         }
 
 #endif
