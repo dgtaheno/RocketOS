@@ -5,7 +5,7 @@
 // =====================================================
 
 #define SYSTEM_NAME                    "RocketOS"
-#define SYSTEM_VERSION                 "0.8.0"
+#define SYSTEM_VERSION                 "0.15.0"
 
 // =====================================================
 // Installed Modules

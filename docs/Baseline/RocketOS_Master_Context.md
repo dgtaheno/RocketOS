@@ -374,7 +374,7 @@ It does not by itself confirm:
 
 The repository audit identified the following items requiring attention:
 
-- `SYSTEM_VERSION` reports `0.8.0` while the repository has a later release tag.
+- `SYSTEM_VERSION` is synchronized with the repository/software release version.
 - `INA219_ENABLED` is false, but the INA219 is still initialized and read.
 - Multiple feature flags may not consistently enable or disable functionality.
 - MAVLink binary data and human-readable diagnostic output share the USB Serial interface.
