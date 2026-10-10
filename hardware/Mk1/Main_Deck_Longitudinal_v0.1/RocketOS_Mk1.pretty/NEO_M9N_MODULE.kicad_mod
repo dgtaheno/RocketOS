@@ -1,0 +1,102 @@
+(footprint "NEO_M9N_MODULE"
+	(version 20260206)
+	(generator "pcbnew")
+	(generator_version "10.0")
+	(layer "F.Cu")
+	(property "Reference" "REF**"
+		(at 3 -3 0)
+		(unlocked yes)
+		(layer "F.SilkS")
+		(uuid "d2cdda54-a5d3-4dfd-baf0-acd9a46c0469")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.1)
+			)
+		)
+	)
+	(property "Value" "NEO_M9N_MODULE"
+		(at 4.05 35.5 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(uuid "5dc13a6f-b47b-45d0-9e2c-28d7a48451d1")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Datasheet" ""
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "924420b2-bab4-411b-9358-1354247e26ba")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(property "Description" ""
+		(at 0 0 0)
+		(unlocked yes)
+		(layer "F.Fab")
+		(hide yes)
+		(uuid "640208bf-733b-4c46-a67c-d864ba64a67b")
+		(effects
+			(font
+				(size 1 1)
+				(thickness 0.15)
+			)
+		)
+	)
+	(attr smd)
+	(duplicate_pad_numbers_are_jumpers no)
+	(fp_rect
+		(start -8.55 -1.85)
+		(end 16.65 33.85)
+		(stroke
+			(width 0.1)
+			(type solid)
+		)
+		(fill no)
+		(layer "F.Fab")
+		(uuid "1e28f250-6c37-4982-b8f4-de39fc4669e0")
+	)
+	(pad "1" thru_hole rect
+		(at 0 0)
+		(size 1.27 1.27)
+		(drill 0.8)
+		(layers "*.Cu" "*.Mask")
+		(remove_unused_layers no)
+		(uuid "747258a9-a81f-4f25-8464-f7dcbc40c339")
+	)
+	(pad "2" thru_hole circle
+		(at 2.54 0)
+		(size 1.27 1.27)
+		(drill 0.8)
+		(layers "*.Cu" "*.Mask")
+		(remove_unused_layers no)
+		(uuid "38b98a3b-69e3-4119-9976-de1ddca1edf7")
+	)
+	(pad "3" thru_hole circle
+		(at 5.08 0)
+		(size 1.27 1.27)
+		(drill 0.8)
+		(layers "*.Cu" "*.Mask")
+		(remove_unused_layers no)
+		(uuid "468402bf-a599-4953-aa6c-988bb4f405d8")
+	)
+	(pad "4" thru_hole circle
+		(at 7.62 0)
+		(size 1.27 1.27)
+		(drill 0.8)
+		(layers "*.Cu" "*.Mask")
+		(remove_unused_layers no)
+		(uuid "ec830bed-3457-43f3-8c5a-a1759b773554")
+	)
+	(embedded_fonts no)
+)
