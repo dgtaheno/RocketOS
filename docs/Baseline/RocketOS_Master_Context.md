@@ -2,13 +2,19 @@
 
 Author: David Garcia-Taheño
 
-Document status: Baseline Reconciled v3
+Document status: Baseline Reconciled v4
 
 Repository reference:
+
 - Repository: RocketOS
 - Branch: main
-- Audited commit: 1b3023f8f2e982317c91b58bc29e1a734755e9d3
-- Latest release identified during the audit: v0.14.1
+- Historical audited commit: 1b3023f8f2e982317c91b58bc29e1a734755e9d3
+- ESP32-S3 firmware migration commit: cd093d0
+- ESP32-S3 hardware identification utility commit: a648cfc
+- Mk1 longitudinal PCB design commit: f234d4b
+- Hardware reference photos commit: 6c75aa6
+- Baseline reconciliation date: 2026-10-10
+
 
 ## Purpose of This Document
 
@@ -16,22 +22,26 @@ This document provides the concise strategic and technical context required to u
 
 It distinguishes explicitly between:
 
-1. The currently implemented development prototype.
+1. The currently implemented and validated development baseline.
 2. The selected RocketOS Mk1 target architecture.
 3. Functionality explicitly planned in the roadmap.
 4. Conceptual ideas that have not yet been accepted into the project baseline.
 
-Repository code and test evidence take precedence when determining whether functionality is currently implemented.
+Repository code, hardware design files, fabrication artifacts, and test evidence take precedence when determining implementation status.
 
-Target-architecture documentation must not be interpreted as evidence that a subsystem has already been implemented, integrated, or validated.
+Target-architecture documentation must not be interpreted as evidence that a subsystem has already been physically integrated or validated.
+
 
 ## Project Definition
 
 RocketOS is an open-source flight-computer, telemetry, data-logging, validation, and post-flight analysis ecosystem for experimental model rockets.
 
-The current repository contains an advanced bench prototype and pre-flight integration platform.
+The current repository contains an advanced bench prototype, an ESP32-S3 Mk1 firmware target, and released Mk1 longitudinal prototype PCB designs.
 
 The complete RocketOS ecosystem remains under development.
+
+No real rocket flight or recovery-deployment validation has yet been completed.
+
 
 ## Project Objectives
 
@@ -48,18 +58,19 @@ RocketOS is intended to provide:
 - Post-flight data analysis.
 - A modular and maintainable hardware and software platform.
 
+
 ## Baseline Layers
 
-### Layer 1: Current Implemented Prototype
+### Layer 1: Current Implemented Development Baseline
 
-The repository currently implements an ESP32-based development prototype with:
+The repository currently implements firmware supporting:
 
-- ESP32 DevKitC V4 build target.
+- ESP32-S3 Mk1 build target.
 - BMP388 barometric pressure and altitude sensor.
 - NEO-M9N GPS using NMEA data and TinyGPSPlus.
 - MicroSD onboard data logging.
 - INA219 voltage, current, and power monitoring.
-- DS18B20 external temperature monitoring.
+- Optional DS18B20 external temperature monitoring.
 - Active buzzer for audible status.
 - MAVLink telemetry over USB Serial.
 - Flight-state detection.
@@ -68,44 +79,57 @@ The repository currently implements an ESP32-based development prototype with:
 - Buffered recovery from temporary SD write failures.
 - Flight-profile simulation and serial replay tools.
 - Native automated tests for flight-state behavior.
-- Hardware replay validation using an ESP32.
+- Hardware identification and validation utilities.
 
-The current prototype is best classified as:
+The historical ESP32 DevKitC V4 implementation remains relevant as the original development and bench-validation platform.
 
-**Advanced bench prototype / pre-flight integration stage.**
+The current Mk1 firmware build target is the ESP32-S3 N16R8 configuration.
 
-It is not yet a complete RocketOS Mk1 ecosystem and is not yet a flight-ready recovery computer.
+The current development baseline is best classified as:
+
+**Advanced bench prototype / Mk1 pre-flight integration stage.**
+
+It is not yet a flight-qualified RocketOS Mk1 system and is not yet a validated recovery computer.
+
 
 ### Layer 2: RocketOS Mk1 Target Architecture
 
 The selected direction for RocketOS Mk1 includes:
 
-- ESP32-S3 SuperMini N16R8 as target MCU.
-- Compact architecture intended for a 54 mm airframe.
+- ESP32-S3 N16R8 MCU.
+- Longitudinal modular PCB architecture.
+- 30 × 85.5 mm Main Deck v0.1.
+- 30 × 85.5 mm Power Deck v0.1.
 - Fixed 2S LiPo power source.
-- Modular carrier/deck PCB architecture.
 - Commercial off-the-shelf modules mounted on carrier or integration PCBs.
+- Independent mechanical battery retention.
 - Replaceable subsystems where practical.
-- Dedicated radio telemetry.
+- Ai-Thinker Ra-02 / SX1278-class LoRa radio hardware.
 - Dedicated RocketOS Ground Station.
 - Post-flight analysis tools.
 - Recovery actuation capability.
 
-Target-architecture items must not be described as implemented unless repository code, hardware files, or validation evidence confirms their status.
+The current Main Deck and Power Deck fabrication designs have been released for prototype manufacture.
+
+Fabrication release does not constitute assembly, electrical bring-up, environmental validation, flight validation, or flight qualification.
+
 
 ### Layer 3: Explicitly Planned Functionality
 
-The repository audit identified the following planned functionality:
+The following functionality remains planned:
 
 - Recovery servo implementation.
-- LoRa radio integration.
+- LoRa firmware integration and radio-link validation.
 - Dedicated RocketOS Ground Station.
 - Flight Analyzer.
-- GY-87 / IMU integration.
+- GY-87 / IMU firmware integration.
+- Physical bring-up and validation of the Mk1 prototype PCBs.
+- Integrated Mk1 system testing.
 - Real-flight validation campaign.
 - Complete RocketOS Mk1 ecosystem.
 
-These items are part of the stated development direction but are not implemented in the audited repository unless explicitly stated otherwise.
+These items are part of the stated development direction but must not be described as implemented unless repository code or validation evidence confirms their status.
+
 
 ### Layer 4: Conceptual Functionality
 
@@ -121,6 +145,7 @@ The following ideas may appear in roadmap or design material but are not part of
 - Additional recovery channels.
 
 Conceptual items must not be treated as requirements or committed roadmap items without an explicit project decision.
+
 
 ## Design Philosophy
 
@@ -138,11 +163,12 @@ RocketOS follows these principles:
 - Keep core modules replaceable where practical.
 - Prefer proven solutions over experimental complexity.
 - Separate implemented functionality from planned and conceptual functionality.
-- Use repository code and test evidence as the technical source of truth.
+- Use repository code and repeatable test evidence as the technical source of truth.
+
 
 ## Integration Philosophy
 
-The project currently prioritizes commercial modules mounted on carrier or deck PCBs.
+The project prioritizes commercial modules mounted on carrier or deck PCBs.
 
 Custom PCBs are primarily intended for:
 
@@ -154,7 +180,10 @@ Custom PCBs are primarily intended for:
 
 A custom PCB should not replace a validated commercial module unless there is a documented technical reason.
 
-Mechanical fit and functional behavior should be validated before committing to a final integrated PCB design.
+Mechanical fit and functional behavior should be validated before committing to later integrated PCB revisions.
+
+The Mk1 v0.1 longitudinal PCBs are prototype integration hardware intended to validate this architecture physically.
+
 
 ## Development Preferences
 
@@ -173,9 +202,10 @@ When supporting this project:
 - Prefer updating existing documentation over creating unnecessary new documents.
 - Keep documentation concise and maintainable.
 
-## Current Prototype Hardware
 
-The current repository implementation references:
+## Historical Development Prototype Hardware
+
+The historical development and bench-validation configuration references:
 
 - ESP32 DevKitC V4.
 - BMP388.
@@ -186,43 +216,103 @@ The current repository implementation references:
 - Active buzzer.
 - USB Serial connection to the host or ground software.
 
-The current repository documentation also references an MP1584 regulator and a 4S LiPo in the prototype or bench configuration.
+Earlier repository documentation also references an MP1584 regulator and a 4S LiPo in the prototype or bench configuration.
 
-This historical prototype power arrangement must not be confused with the Mk1 target architecture.
+This historical prototype power arrangement must not be confused with the current Mk1 architecture.
 
-## RocketOS Mk1 Target Hardware
 
-The current target direction includes:
+## RocketOS Mk1 Hardware Baseline
 
-- ESP32-S3 SuperMini N16R8.
-- Fixed 2S LiPo architecture (7.4 V nominal, 8.4 V maximum).
+The current Mk1 hardware baseline includes:
+
+- ESP32-S3 N16R8.
+- BMP388.
+- NEO-M9N GPS breakout.
+- MicroSD module.
+- INA219 power monitor.
+- GY-87 sensor module.
+- Ai-Thinker Ra-02 / SX1278-class LoRa module.
+- Active buzzer.
+- Fixed 2S LiPo architecture, 7.4 V nominal and 8.4 V maximum.
 - Tattu 2S 550 mAh LiPo as the current Mk1 development battery.
-- Compact modular deck or carrier architecture.
-- Power Deck.
-- Radio telemetry module.
-- Recovery actuator.
-- 54 mm integration envelope.
+- Longitudinal Main Deck.
+- Longitudinal Power Deck.
+- Modular mechanical sled architecture.
 
-The exact LoRa radio module still requires baseline confirmation.
+DS18B20 support remains available in firmware but is disabled in the current Mk1 configuration.
 
-Earlier documentation mentions an SX1278, while more recent architecture or roadmap material identified during repository analysis refers to an SX1262.
+The Main Deck v0.1 and Power Deck v0.1 both use a 30 × 85.5 mm PCB envelope.
 
-Until the selection is confirmed through a project decision, the authoritative wording is:
+The boards are intended to mount longitudinally in the mechanical sled architecture.
 
-- LoRa radio module: target device not yet baselined.
+The battery is mechanically retained independently of the PCBs.
+
+
+## Mk1 Main Deck v0.1
+
+The current Main Deck v0.1 design integrates or provides interfaces for:
+
+- ESP32-S3 N16R8.
+- BMP388.
+- NEO-M9N GPS.
+- MicroSD.
+- GY-87.
+- Ai-Thinker Ra-02 / SX1278-class LoRa radio.
+- Active buzzer and transistor driver.
+- Power Deck interconnection.
+
+The Main Deck design uses shared buses where appropriate:
+
+- I2C for compatible sensor modules.
+- Shared SPI for MicroSD and LoRa with independent chip-select signals.
+
+The Main Deck schematic has passed ERC without violations.
+
+The PCB has no unresolved routing connections.
+
+Fabrication data has been generated and released for prototype manufacture.
+
+Accepted KiCad footprint-library mismatch warnings and intentional courtyard exclusions are documented design-tool conditions and are not equivalent to electrical validation.
+
+
+## Mk1 Power Deck v0.1
+
+The current Power Deck v0.1 provides the prototype power architecture based on:
+
+- XT30 battery input.
+- 2 A resettable protection fuse.
+- Main power switch interface.
+- INA219 current and voltage measurement.
+- MP1584 regulator module.
+- 5 V output to the Main Deck.
+- 3.3 V logic supply return from the Main Deck for INA219 communication.
+- I2C interconnection.
+- Bulk and local decoupling.
+
+The Power Deck schematic and PCB have passed the final KiCad design checks used for the prototype release:
+
+- 0 DRC violations.
+- 0 unconnected items.
+- 0 schematic-parity errors.
+
+Fabrication data has been generated and released for prototype manufacture.
+
+The Power Deck PCB has not yet been physically assembled, electrically brought up, or flight validated.
+
 
 ## Current Implemented Firmware Capabilities
 
-The audited repository contains:
+The current repository contains:
 
 - Modular C++ libraries.
 - Central Arduino `setup()` and `loop()` control flow.
 - Timed execution based on `millis()`.
+- ESP32-S3 build configuration.
 - BMP388 pressure, temperature, and relative-altitude acquisition.
 - GPS parsing and validity handling.
-- INA219 voltage, current, and power acquisition.
+- Optional INA219 voltage, current, and power acquisition.
 - Battery state estimation and battery warnings.
-- DS18B20 external-temperature acquisition.
+- Optional DS18B20 external-temperature acquisition.
 - MicroSD CSV logging.
 - RAM buffering during temporary SD failures.
 - Recovery and ordered flush of buffered records.
@@ -233,12 +323,41 @@ The audited repository contains:
 - MAVLink message generation over USB Serial.
 - Native GoogleTest validation.
 - Flight-profile replay.
-- Serial profile replay into physical ESP32 hardware.
+- Serial profile replay.
 - OpenRocket and generic CSV profile import tooling.
+
+The INA219 initialization and runtime update paths are controlled by `INA219_ENABLED`.
+
+The current Mk1 configuration disables INA219 firmware access until the corresponding hardware integration is ready for bring-up.
+
+DS18B20 is also disabled in the current Mk1 configuration.
+
+
+## Current ESP32-S3 Pin Baseline
+
+The current Mk1 firmware configuration uses:
+
+- GPS RX: GPIO17.
+- GPS TX: GPIO18.
+- I2C SDA: GPIO8.
+- I2C SCL: GPIO9.
+- Shared SPI MOSI: GPIO11.
+- Shared SPI MISO: GPIO13.
+- Shared SPI clock: GPIO12.
+- MicroSD CS: GPIO5.
+- LoRa NSS: GPIO10.
+- LoRa RESET: GPIO14.
+- LoRa DIO0: GPIO15.
+- Buzzer control: GPIO21.
+
+DS18B20 support is currently disabled.
+
+GPIO4 is therefore not part of the active Mk1 sensor configuration.
+
 
 ## Implemented Flight-State Sequence
 
-The audited firmware implements:
+The firmware implements:
 
 - IDLE
 - BOOST
@@ -252,6 +371,7 @@ The current implementation uses barometric altitude and derived climb rate.
 This functionality is flight-event detection.
 
 It is not guidance, navigation, closed-loop flight control, or recovery deployment control.
+
 
 ## Implemented Logging Behavior
 
@@ -269,13 +389,14 @@ The current firmware includes:
 
 The configured buffer contains 100 records.
 
-The current default logging interval reported by the repository audit is one second.
+Logging frequency remains defined by the current firmware configuration and must not be inferred from historical documentation when evaluating performance.
+
 
 ## Implemented Telemetry Behavior
 
 The current firmware implements MAVLink over USB Serial.
 
-The audited MAVLink wrapper sends:
+The MAVLink wrapper provides messages including:
 
 - HEARTBEAT.
 - SYS_STATUS.
@@ -287,16 +408,20 @@ The audited MAVLink wrapper sends:
 - HOME_POSITION.
 - STATUSTEXT.
 
-LoRa transport is not implemented in the audited repository.
+LoRa hardware is now selected and represented in the Mk1 hardware design.
 
-MAVLink and LoRa must be treated as separate layers:
+LoRa transport is not yet implemented or validated in the current flight firmware.
+
+MAVLink and LoRa must therefore continue to be treated as separate layers:
 
 - MAVLink message layer: implemented over USB Serial.
-- LoRa physical transport: planned.
+- LoRa hardware interface: defined in the Mk1 hardware baseline.
+- LoRa physical transport in flight firmware: planned.
+
 
 ## Current Validation Status
 
-Repository-reported validation includes:
+Repository and bench validation includes:
 
 - Native state-machine tests.
 - Full flight-profile replay tests.
@@ -306,100 +431,161 @@ Repository-reported validation includes:
 - Validation of a synthetic mid-power Mach-dip profile.
 - Repository-reported QGroundControl compatibility.
 - Repository-reported INA219 hot-plug behavior.
-- BatteryMonitor bench validation on 2026-08-28 after migration from 4S to 2S:
-  - USB-powered hardware with the LiPo disconnected measured 4.10-4.13 V and reported `DISCONNECTED`.
-  - Connected 2S battery measured 7.72-7.90 V and reported `CONNECTED` / `OK` with a coherent SOC estimate.
+- BatteryMonitor bench validation after migration from 4S to 2S.
+- Physical identification of the ESP32-S3 N16R8 development module.
+- Successful compilation of the Mk1 flight firmware for ESP32-S3.
+- Native regression-test execution after the ESP32-S3 migration.
 
-The validated Mk1 BatteryMonitor baseline is:
+Physical ESP32-S3 identification confirmed:
+
+- ESP32-S3.
+- 240 MHz CPU.
+- 16 MB flash.
+- Approximately 8 MiB PSRAM.
+
+On 2026-10-10, the `esp32s3_n16r8` flight-firmware environment built successfully.
+
+Reported build usage:
+
+- RAM: 29,452 bytes / 327,680 bytes, 9.0%.
+- Firmware flash usage: 394,633 bytes / 3,342,336 bytes, 11.8%.
+
+The native regression suite executed after the migration with:
+
+**9 test cases / 9 succeeded.**
+
+The tests covered three flight-profile cases and six flight-state-machine cases.
+
+The validated Mk1 BatteryMonitor baseline remains:
 
 - Battery disconnected below 5.0 V.
 - SOC curve from 6.60 V = 0% to 8.40 V = 100%.
 - Warning threshold at 7.20 V.
 - Critical threshold at 6.80 V.
 
-This validates the BatteryMonitor behavior on the current bench prototype. It does not validate the Power Deck PCB or the complete Mk1 power subsystem.
+Previous bench validation reported:
 
-The repository audit did not independently rerun the tests.
+- USB-powered hardware with the LiPo disconnected measured approximately 4.10-4.13 V and reported `DISCONNECTED`.
+- Connected 2S battery measured approximately 7.72-7.90 V and reported `CONNECTED` / `OK` with a coherent SOC estimate.
 
-No real rocket flight or deployment test was evidenced in the audited repository.
+This validates BatteryMonitor behavior on the bench configuration.
+
+It does not validate the complete Mk1 Power Deck hardware.
+
+No real rocket flight or recovery-deployment test has yet been completed.
+
 
 ## Current Hardware Development
 
-The repository contains KiCad work for:
+The repository now contains the active Mk1 longitudinal KiCad designs for:
 
+- Main Deck v0.1.
 - Power Deck v0.1.
 
-The existence of KiCad files confirms hardware-design activity.
+The previous Power Deck design has been moved to the `superseded` hardware area.
 
-It does not by itself confirm:
+The active Main Deck and Power Deck designs each use a 30 × 85.5 mm PCB envelope.
 
-- Manufacturing readiness.
-- Completed schematic review.
-- Completed PCB layout review.
-- Released fabrication package.
-- Completed BOM.
-- Assembly.
+The repository includes:
+
+- KiCad schematic sources.
+- KiCad PCB sources.
+- Required custom symbols and footprints.
+- Gerber fabrication layers.
+- PTH and NPTH drill files.
+- Gerber job files.
+- Exact manufacturing ZIP packages.
+
+The v0.1 fabrication packages have been released for prototype manufacture.
+
+This establishes prototype PCB manufacturing readiness for these specific v0.1 designs.
+
+It does not establish:
+
+- Correct physical manufacture.
+- Assembly quality.
 - Board bring-up.
-- Electrical validation.
+- Electrical integration validation.
+- Mechanical sled validation.
+- Environmental validation.
 - Flight validation.
+
 
 ## Current Development Status
 
 - Strategic project definition: established.
-- High-level target architecture: established.
-- Prototype firmware: substantially implemented for bench testing.
+- High-level Mk1 architecture: established.
+- Historical ESP32 bench prototype: implemented and validated for development use.
+- ESP32-S3 Mk1 firmware migration: implemented and build validated.
+- ESP32-S3 physical module identification: validated.
 - Modular firmware structure: implemented.
 - BMP388 integration: implemented.
 - GPS integration: implemented.
 - MicroSD logging: implemented.
 - Buffered logging recovery: implemented.
-- INA219 integration: implemented in code.
-- DS18B20 integration: implemented.
+- INA219 firmware integration: implemented and feature-gated.
+- DS18B20 firmware integration: implemented but disabled for current Mk1.
 - Buzzer integration: implemented.
 - MAVLink over USB Serial: implemented.
 - Flight-state detection: implemented.
 - Profile replay: implemented.
-- Native automated tests: implemented.
-- Power subsystem: under refinement.
-- Power Deck PCB: under development.
-- ESP32-S3 Mk1 migration: not yet confirmed as validated.
+- Native automated tests: implemented and passing 9/9.
+- Main Deck v0.1 PCB design: released for prototype fabrication.
+- Power Deck v0.1 PCB design: released for prototype fabrication.
+- Mk1 PCB physical bring-up: pending.
+- Mk1 mechanical sled: not yet finalized.
 - Recovery actuation: not implemented.
-- LoRa radio link: not implemented.
-- GY-87 / IMU integration: not implemented.
+- LoRa hardware selection: established as Ai-Thinker Ra-02 / SX1278-class.
+- LoRa firmware radio link: not implemented.
+- GY-87 hardware interface: present in Mk1 design.
+- GY-87 firmware integration: not implemented.
 - Dedicated Ground Station: not implemented.
 - Flight Analyzer: not implemented.
+- Integrated Mk1 bench validation: pending.
 - Real-flight validation: not completed.
 
-## Known Baseline Issues
 
-The repository audit identified the following items requiring attention:
+## Known Baseline Issues and Open Validation Items
 
-- `SYSTEM_VERSION` is synchronized with the repository/software release version.
-- `INA219_ENABLED` is false, but the INA219 is still initialized and read.
-- Multiple feature flags may not consistently enable or disable functionality.
+The following items remain open:
+
 - MAVLink binary data and human-readable diagnostic output share the USB Serial interface.
-- `RecoveryServo` source files are placeholders.
-- `FlightSimulator` appears implemented but effectively disconnected from the main execution path.
-- The detailed Mk1 power-distribution architecture is not settled.
-- The final LoRa radio selection is not settled.
-- PCB manufacturing readiness is not demonstrated.
+- `RecoveryServo` source files remain placeholders.
+- `FlightSimulator` integration with the main execution path requires confirmation before being treated as active runtime functionality.
+- Main Deck and Power Deck v0.1 require physical inspection after manufacture.
+- Main Deck and Power Deck require continuity and power-up validation.
+- MP1584 output must be verified before connection to the Main Deck during hardware bring-up.
+- USB plus external 5 V power behavior requires validation before simultaneous use.
+- GPS outdoor fix behavior on the Mk1 ESP32-S3 configuration remains to be validated.
+- Shared SPI operation between MicroSD and LoRa requires firmware implementation and bench validation.
+- Shared I2C operation of the Mk1 sensor set requires integrated bench validation.
+- LoRa radio transport is not implemented.
+- Recovery actuation is not implemented.
+- Mechanical sled geometry and retention remain to be finalized and validated.
 - Real-flight validation is pending.
+
 
 ## Authority Rules
 
 When determining project truth, use the following priority:
 
 1. Current repository code at a named commit.
-2. Current repository test reports and repeatable test evidence.
-3. Approved decision records.
-4. Current architecture and requirements documents.
-5. Roadmap documentation.
-6. Historical sprint material.
-7. Unapproved concepts and discussion.
+2. Current repository test reports and repeatable validation evidence.
+3. Released hardware source files and exact fabrication artifacts for hardware-design state.
+4. Approved decision records.
+5. Current architecture and requirements documents.
+6. Roadmap documentation.
+7. Historical sprint material.
+8. Unapproved concepts and discussion.
 
 A component name or roadmap entry alone does not prove implementation.
 
-A test report documents reported validation, but independent test evidence should be distinguished from author-reported results.
+A PCB design or fabrication package proves a hardware-design and manufacturing-release state, not successful physical validation.
+
+A successful firmware build proves build compatibility, not complete hardware operation.
+
+A test report documents the behavior covered by that test and must not be generalized beyond its validation scope.
+
 
 ## Confidentiality and Project Separation
 
