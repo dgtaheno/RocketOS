@@ -27,7 +27,13 @@ static const char* flightStateToString(uint8_t state)
 
 bool SDLogger::begin()
 {
-    return SD.begin(SD_CS_PIN);
+    SPI.begin(
+        SD_SCK_PIN,
+        SD_MISO_PIN,
+        SD_MOSI_PIN,
+        SD_CS_PIN);
+
+    return SD.begin(SD_CS_PIN, SPI);
 }
 
 bool SDLogger::selfTest()

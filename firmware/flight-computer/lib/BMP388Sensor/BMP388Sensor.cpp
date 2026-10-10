@@ -1,5 +1,7 @@
 #include "BMP388Sensor.h"
 
+#include "../../include/Config.h"
+
 #include <Arduino.h>
 #include <Wire.h>
 
@@ -7,9 +9,9 @@
 
 bool BMP388Sensor::begin()
 {
-    Wire.begin(21, 22);
+    Wire.begin(I2C_SDA_PIN, I2C_SCL_PIN);
 
-    if (!bmp.begin_I2C(0x77))
+    if (!bmp.begin_I2C(BMP388_I2C_ADDRESS))
     {
         return false;
     }

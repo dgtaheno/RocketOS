@@ -28,8 +28,8 @@
 
 #define GPS_UART_BAUDRATE              38400
 
-#define GPS_RX_PIN                     16
-#define GPS_TX_PIN                     17
+#define GPS_RX_PIN                     17
+#define GPS_TX_PIN                     18
 
 // Local time offset from UTC
 #define UTC_OFFSET_HOURS               2
@@ -45,13 +45,19 @@
 // BMP388 Configuration
 // =====================================================
 
-#define BMP388_I2C_ADDRESS             0x77
+#define I2C_SDA_PIN                     8
+#define I2C_SCL_PIN                     9
+
+#define BMP388_I2C_ADDRESS              0x77
 
 // =====================================================
 // SD Card Configuration
 // =====================================================
 
 #define SD_CS_PIN                      5
+#define SD_SCK_PIN                     12
+#define SD_MISO_PIN                    13
+#define SD_MOSI_PIN                    11
 
 // SD usage monitoring thresholds
 #define SD_USAGE_WARNING_PERCENT       80
@@ -120,12 +126,12 @@
 // Buzzer Configuration
 // =====================================================
 #define BUZZER_ENABLED true
-#define BUZZER_PIN 25
+#define BUZZER_PIN 21
 
 // =====================================================
 // DS18B20 External Thermometer Configuration
 // =====================================================
-#define EXT_THERMOMETER_ENABLED   true
+#define EXT_THERMOMETER_ENABLED   false
 #define EXT_THERMOMETER_PIN       4
 
 // =====================================================

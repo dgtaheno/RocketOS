@@ -475,6 +475,19 @@ void setup()
 {
     Serial.begin(115200);
 
+    // Allow native USB CDC time to reconnect after reset/upload.
+    // Timeout prevents USB absence from blocking startup.
+    uint32_t serialWaitStart = millis();
+
+    while (!Serial && (millis() - serialWaitStart < 5000))
+    {
+        delay(10);
+    }
+
+    Serial.println();
+    Serial.println("[BOOT] RocketOS serial connected");
+    Serial.flush();
+
     health.reset();
 
     events.begin();
@@ -543,6 +556,9 @@ void setup()
         Serial.println("[FAIL] BMP388 sensor not detected");
 
 #if HALT_ON_BMP388_FAIL
+        Serial.println("[HALT] BMP388 failure");
+        Serial.flush();
+
         while (1)
         {
             delay(1000);
@@ -558,6 +574,9 @@ void setup()
         Serial.println("[FAIL] BMP388 self-test failed");
 
 #if HALT_ON_BMP388_FAIL
+        Serial.println("[HALT] BMP388 self-test failure");
+        Serial.flush();
+
         while (1)
         {
             delay(1000);
@@ -573,10 +592,18 @@ void setup()
     // INA219
     // --------------------------------------------------
 
+#if INA219_ENABLED
+
     if (!ina219Sensor.begin())
     {
         Serial.println("[WARN] INA219 power monitor not detected");
     }
+
+#else
+
+    Serial.println("[SKIP] INA219 power monitor disabled in Config.h");
+
+#endif
 
     // --------------------------------------------------
     // External Thermometer (DS18B20)
@@ -613,6 +640,8 @@ void setup()
         Serial.println("[FAIL] SD card not detected");
 
 #if HALT_ON_SD_FAIL
+        Serial.println("[HALT] SD failure");
+        Serial.flush();
         while (1)
         {
             delay(1000);
@@ -632,6 +661,8 @@ void setup()
                 "[FAIL] SD card self-test failed");
 
 #if HALT_ON_SD_FAIL
+            Serial.println("[HALT] SD self-test failure");
+            Serial.flush();
             while (1)
             {
                 delay(1000);
@@ -1066,11 +1097,15 @@ void loop()
         // INA219 Update
         // --------------------------------------------------
 
-        bool ina219Ok = ina219Sensor.update();
+        bool ina219Ok = false;
 
         float batteryVoltage = 0.0f;
         float current_mA = 0.0f;
         float power_mW = 0.0f;
+
+#if INA219_ENABLED
+
+        ina219Ok = ina219Sensor.update();
 
         if (ina219Ok)
         {
@@ -1091,6 +1126,13 @@ void loop()
             batteryMonitor.update(
                 0.0f);
         }
+
+#else
+
+        batteryMonitor.update(
+            0.0f);
+
+#endif
 
         updateBatteryEvents();
 
