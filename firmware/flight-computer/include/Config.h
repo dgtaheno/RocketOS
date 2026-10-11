@@ -48,7 +48,7 @@
 #define I2C_SDA_PIN                     8
 #define I2C_SCL_PIN                     9
 
-#define BMP388_I2C_ADDRESS              0x77
+#define BMP388_I2C_ADDRESS              0x76
 
 // =====================================================
 // SD Card Configuration

@@ -537,11 +537,11 @@ It does not establish:
 - Recovery actuation: not implemented.
 - LoRa hardware selection: established as Ai-Thinker Ra-02 / SX1278-class.
 - LoRa firmware radio link: not implemented.
-- GY-87 hardware interface: present in Mk1 design.
+- GY-87 hardware interface: present in Mk1 design; shared-I2C electrical coexistence bench validated.
 - GY-87 firmware integration: not implemented.
 - Dedicated Ground Station: not implemented.
 - Flight Analyzer: not implemented.
-- Integrated Mk1 bench validation: pending.
+- Integrated Mk1 bench validation: partially completed; shared-I2C sensor-bus operation and BMP388/GPS/MicroSD operation have been bench validated, while complete Mk1 integration remains pending.
 - Real-flight validation: not completed.
 
 
@@ -553,6 +553,7 @@ The following items remain open:
 - `RecoveryServo` source files remain placeholders.
 - `FlightSimulator` integration with the main execution path requires confirmation before being treated as active runtime functionality.
 - Main Deck and Power Deck v0.1 require physical inspection after manufacture.
+- The released Main Deck v0.1 fabrication package leaves the external BMP388 SDO pin unconnected. The fabricated v0.1 boards require an SDO-to-GND rework to select BMP388 address 0x76 and avoid the GY-87 BMP180 address at 0x77. The current KiCad source contains this correction.
 - Main Deck and Power Deck require continuity and power-up validation.
 - MP1584 output must be verified before connection to the Main Deck during hardware bring-up.
 - USB plus external 5 V power behavior requires validation before simultaneous use.

@@ -889,6 +889,30 @@ This includes:
 Real-flight validation remains a later milestone.
 
 
+
+## 2026-10-11 - Mk1 Shared-I2C Bench Validation
+
+Mk1 breadboard validation reproduced the Main Deck sensor-bus configuration before PCB bring-up.
+
+Testing identified an I2C address collision between the external BMP388 at its default address 0x77 and the BMP180 present on the GY-87, also at 0x77. The GY-87 MPU-6050 was independently identified at 0x68.
+
+The conflict was resolved by tying the external BMP388 SDO pin to GND, selecting address 0x76. Bench testing then confirmed simultaneous I2C visibility of:
+
+- INA219 at 0x40.
+- MPU-6050 at 0x68.
+- External BMP388 at 0x76.
+- GY-87 BMP180 at 0x77.
+
+The flight firmware BMP388 address was changed from 0x77 to 0x76. With the GY-87 connected, the flight firmware successfully initialized the BMP388, MicroSD, and GPS, created a flight log, acquired a GPS fix, and reported a healthy system with no fault flags.
+
+The Main Deck KiCad source was corrected to connect BMP388 SDO to GND. ERC completed with 0 errors and 0 warnings. PCB DRC completed with 0 errors, 0 unconnected items, 0 unrouted items, and 0 schematic-parity errors; the existing accepted footprint-library warnings remain unchanged.
+
+The already-released Main Deck v0.1 fabrication package predates this correction and leaves BMP388 SDO unconnected. Fabricated v0.1 boards therefore require an SDO-to-GND rework during assembly. The released v0.1 fabrication package remains unchanged for as-built traceability.
+
+After the firmware correction, the ESP32-S3 flight-computer build completed successfully and all 9/9 native regression tests passed.
+
+This is bench validation of the Mk1 electrical architecture and does not constitute flight qualification.
+
 # Superseded Baselines
 
 The following previous project elements are retained for historical traceability but are no longer the active Mk1 baseline:

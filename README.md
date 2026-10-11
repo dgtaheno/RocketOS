@@ -30,9 +30,18 @@ Both PCB designs have been released for prototype fabrication.
 
 The current ESP32-S3 firmware builds successfully and the native regression suite passes **9/9 tests**.
 
-The Mk1 PCBs have **not yet been physically brought up or flight validated**.
+The Mk1 electrical configuration is now being reproduced and validated on the bench before physical PCB bring-up.
 
-Current work is focused on reproducing and validating the Mk1 electrical configuration on the bench before physical PCB bring-up.
+Bench validation has confirmed simultaneous shared-I2C operation of:
+
+- INA219 at `0x40`.
+- GY-87 MPU-6050 at `0x68`.
+- External BMP388 at `0x76`.
+- GY-87 BMP180 at `0x77`.
+
+The external BMP388 address was changed from its default `0x77` to `0x76` to resolve the address collision with the BMP180 present on the GY-87.
+
+The fabricated Mk1 PCBs have **not yet been physically brought up or flight validated**.
 
 ---
 
@@ -75,17 +84,35 @@ The Main Deck is based on the **ESP32-S3 N16R8** and provides interfaces for:
 |---|---|---|
 | Microcontroller | ESP32-S3 N16R8 | Flight computer |
 | GNSS | u-blox NEO-M9N | Position, altitude, speed and UTC |
-| Barometer | BMP388 | Pressure, temperature and altitude |
+| Barometer | BMP388 at I2C `0x76` | Pressure, temperature and altitude |
 | Storage | MicroSD | Flight-data logging |
 | IMU module | GY-87 | Future inertial sensing |
 | Radio | Ai-Thinker Ra-02 / SX1278 | Future LoRa telemetry |
 | Audible feedback | Active buzzer | Status and recovery beacon |
+
+The external BMP388 is fixed at I2C address **`0x76`** by tying SDO to GND. This avoids the **`0x77`** address used by the BMP180 present on the Mk1 GY-87 module.
+
+The already-released Main Deck v0.1 fabrication package predates this correction and leaves BMP388 SDO unconnected. Fabricated v0.1 boards therefore require an **SDO-to-GND rework** during assembly. The current KiCad source includes the corrected connection.
 
 Main Deck envelope:
 
 ```text
 30 × 85.5 mm
 ```
+
+#### Main Deck module references
+
+| ESP32-S3 N16R8 | BMP388 | NEO-M9N |
+|---|---|---|
+| ![ESP32-S3](docs/images/ESP32-S3%20nano%20front.jpg) | ![BMP388](docs/images/BMP388.png) | ![NEO-M9N](docs/images/M9N.png) |
+
+| MicroSD | GY-87 | Ra-02 / SX1278 |
+|---|---|---|
+| ![MicroSD](docs/images/microsd.png) | ![GY-87](docs/images/gy-87.png) | ![Ra-02](docs/images/Lora%20front.jpg) |
+
+| Active buzzer |
+|---|
+| ![Active buzzer](docs/images/buzzer.png) |
 
 ### Power Deck v0.1
 
@@ -106,6 +133,12 @@ Power Deck envelope:
 30 × 85.5 mm
 ```
 
+#### Power Deck module references
+
+| INA219 | MP1584 |
+|---|---|
+| ![INA219](docs/images/INA219.png) | ![MP1584](docs/images/MP1584.png) |
+
 ### Battery
 
 Current Mk1 development battery:
@@ -116,7 +149,25 @@ Tattu 2S 550 mAh LiPo
 8.4 V maximum
 ```
 
+![Tattu 2S 550 mAh LiPo](docs/images/Tattu2S.png)
+
 The battery is mechanically retained independently of the PCBs.
+
+### Mk1 Schematics
+
+The current Mk1 electrical architecture is split between two longitudinal PCBs.
+
+#### Main Deck v0.1
+
+![Main Deck v0.1 schematic](docs/schematics/main-deck-v0.1.svg)
+
+#### Power Deck v0.1
+
+![Power Deck v0.1 schematic](docs/schematics/power-deck-v0.1.svg)
+
+The schematic SVGs are exported from the current KiCad source.
+
+Earlier `flighttelemetry-v*.png` schematics are retained in `docs/schematics/` for historical traceability and do not represent the current Mk1 architecture.
 
 ---
 
@@ -142,7 +193,7 @@ The battery is mechanically retained independently of the PCBs.
               |     Main Deck     |
               |                   |
               | ESP32-S3 N16R8    |
-              | BMP388            |
+              | BMP388 @ 0x76     |
               | NEO-M9N           |
               | MicroSD           |
               | GY-87             |
@@ -190,6 +241,23 @@ MicroSD and LoRa share the SPI bus and use independent chip-select signals.
 Integrated MicroSD + LoRa operation still requires bench validation.
 
 DS18B20 support remains in the firmware but is disabled in the current Mk1 configuration.
+
+---
+
+## Mk1 I2C Baseline
+
+The Mk1 shared I2C bus has been bench validated with the current module set:
+
+| Device | Address | Status |
+|---|---:|---|
+| INA219 | `0x40` | Detected |
+| GY-87 MPU-6050 | `0x68` | Detected and identified |
+| External BMP388 | `0x76` | Detected and flight-firmware validated |
+| GY-87 BMP180 | `0x77` | Detected and identified |
+
+The external BMP388 uses SDO tied to GND to select address `0x76`.
+
+This establishes electrical coexistence on the shared bus. GY-87 sensor acquisition is not yet integrated into the flight firmware.
 
 ---
 
@@ -324,12 +392,10 @@ Build with:
 & "$env:USERPROFILE\.platformio\penv\Scripts\pio.exe" run -d "firmware\flight-computer" -e esp32s3_n16r8
 ```
 
-Validated on 2026-10-10:
+Current validation:
 
 ```text
 Build: SUCCESS
-RAM:   29,452 / 327,680 bytes (9.0%)
-Flash: 394,633 / 3,342,336 bytes (11.8%)
 Tests: 9 / 9 passed
 ```
 
@@ -390,16 +456,26 @@ It does **not** validate the complete Mk1 Power Deck.
 - 2S BatteryMonitor behavior.
 - Main Deck v0.1 PCB design release.
 - Power Deck v0.1 PCB design release.
+- Mk1 BMP388 on GPIO8/GPIO9 I2C bus.
+- Mk1 MicroSD on GPIO11/GPIO12/GPIO13 with GPIO5 CS.
+- Mk1 NEO-M9N on GPIO17/GPIO18.
+- Shared-I2C electrical coexistence of INA219, MPU-6050, BMP388 and BMP180.
+- BMP388 address correction to `0x76`.
+- BMP388 + MicroSD + GPS simultaneous flight-firmware startup.
+- MicroSD flight-log creation.
+- GPS fix acquisition on the Mk1 bench configuration.
 
 ### Pending
 
-- Exact Mk1 configuration on the integration bench.
+- Buzzer circuit bench validation.
+- Ra-02 bench validation.
+- Shared MicroSD + Ra-02 SPI operation.
+- Complete Power Deck topology bench validation.
 - Main Deck physical PCB bring-up.
 - Power Deck physical PCB bring-up.
-- Integrated Mk1 I2C bus.
-- Shared MicroSD + LoRa SPI operation.
 - GY-87 firmware integration.
 - LoRa radio communication.
+- Complete integrated Mk1 bench validation.
 - Mechanical sled validation.
 - Recovery actuation.
 - Real-flight validation.
@@ -434,6 +510,12 @@ Prototype order:
 
 The exact manufacturing packages are retained in the repository.
 
+The released Main Deck v0.1 fabrication package leaves BMP388 SDO unconnected. The five fabricated Main Deck v0.1 boards therefore require an **SDO-to-GND rework** when the BMP388 is installed.
+
+The current KiCad source contains the corrected SDO-to-GND connection.
+
+The released v0.1 fabrication package remains unchanged to preserve exact as-built traceability.
+
 Fabrication release does not imply electrical or flight validation.
 
 ---
@@ -446,6 +528,7 @@ RocketOS/
 +-- docs/
 |   +-- Baseline/
 |   +-- images/
+|   +-- schematics/
 |
 +-- firmware/
 |   +-- flight-computer/
@@ -453,8 +536,8 @@ RocketOS/
 |
 +-- hardware/
 |   +-- Mk1/
-|       +-- Main_Deck/
-|       +-- Power_Deck/
+|       +-- Main_Deck_Longitudinal_v0.1/
+|       +-- Power_Deck_Longitudinal/
 |       +-- superseded/
 |
 +-- README.md
@@ -509,21 +592,18 @@ These states are not interchangeable.
 The immediate development sequence is:
 
 ```text
-1. Reproduce Mk1 electrical configuration on the bench
-2. Validate ESP32-S3 + BMP388
-3. Validate MicroSD on Mk1 SPI pins
-4. Validate NEO-M9N on Mk1 UART pins
-5. Validate buzzer
-6. Validate integrated Mk1 I2C bus
-7. Validate Ra-02
-8. Validate shared MicroSD + Ra-02 SPI bus
-9. Validate Power Deck topology on the bench
-10. Bring up fabricated Power Deck
-11. Bring up fabricated Main Deck
-12. Develop and validate longitudinal mechanical sled
-13. Integrate LoRa telemetry firmware
-14. Integrated Mk1 bench validation
-15. Real-flight validation
+1. Validate buzzer transistor circuit
+2. Validate Ra-02
+3. Validate shared MicroSD + Ra-02 SPI bus
+4. Validate complete Power Deck topology on the bench
+5. Receive and inspect prototype PCBs
+6. Bring up fabricated Power Deck
+7. Bring up fabricated Main Deck, including BMP388 SDO-to-GND rework
+8. Develop and validate longitudinal mechanical sled
+9. Integrate GY-87 firmware acquisition
+10. Integrate LoRa telemetry firmware
+11. Complete integrated Mk1 bench validation
+12. Real-flight validation
 ```
 
 ---

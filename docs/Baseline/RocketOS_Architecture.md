@@ -470,7 +470,15 @@ The GY-87 is represented in the Main Deck v0.1 hardware design and shares the Mk
 
 Firmware acquisition and use of GY-87 data are not currently part of the implemented flight-computer baseline.
 
-Shared I2C operation must be validated during Mk1 hardware bring-up.
+Mk1 shared-I2C operation has been bench validated.
+
+The GY-87 used for Mk1 contains an MPU-6050 at address 0x68 and an onboard BMP180 at address 0x77. This conflicts with the external BMP388 default address of 0x77.
+
+The Mk1 architecture therefore fixes the external BMP388 at address 0x76 by tying its SDO pin to GND. Bench validation confirmed simultaneous I2C operation of INA219 at 0x40, MPU-6050 at 0x68, external BMP388 at 0x76, and GY-87 BMP180 at 0x77.
+
+The Main Deck v0.1 fabrication package was released before this address conflict was discovered and leaves the external BMP388 SDO pin unconnected. Fabricated Main Deck v0.1 boards therefore require an SDO-to-GND rework when the BMP388 is installed. The current KiCad source includes the corrected SDO-to-GND connection.
+
+This validation establishes electrical coexistence on the shared I2C bus; GY-87 firmware acquisition remains unimplemented.
 
 
 ## Recovery Architecture
